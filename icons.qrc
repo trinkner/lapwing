@@ -1,0 +1,20 @@
+<RCC>
+    <qresource prefix="/">
+        <file>icon_bird.png</file>
+        <file>icon_find.png</file>
+        <file>icon_location.png</file>
+        <file>icon_open.png</file>
+        <file>icon_checklists.png</file>
+        <file>icon_datetotals.png</file>
+        <file>icon_tripreport.png</file>
+        <file>icon_locationtotals.png</file>
+        <file>icon_families.png</file>
+        <file>icon_compare.png</file>
+        <file>icon_map.png</file>
+        <file>icon_lapwing_small.png</file>
+        <file>icon_individual.png</file>
+        <file>icon_pdf.png</file>
+        <file>icon_print.png</file>
+        <file>icon_filter.png</file>
+    </qresource>
+</RCC>
