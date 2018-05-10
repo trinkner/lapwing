@@ -992,6 +992,7 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                 
                 if len(checklists) > 0:
                     sub = Lists()
+                    sub.mdiParent = self.mdiParent
                     sub.FillChecklists(filter)
 
         if self.listType == "Locations":
@@ -1001,6 +1002,7 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                 locationName = self.tblList.item(currentRow,  0).text()
                 
                 sub = code_Location.Location()
+                sub.mdiParent = self.mdiParent
                 sub.FillLocation(locationName)
                 
             if currentColumn > 0:
@@ -1030,9 +1032,11 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                     filter.setLocationType("Location")
                     filter.setLocationName(checklists[0][3])
                     sub = Lists()
+                    sub.mdiParent = self.mdiParent
                     sub.FillSpecies(filter) 
                 if len(checklists) > 1:
                     sub = Lists()
+                    sub.mdiParent = self.mdiParent
                     sub.FillChecklists(filter)
 
         if self.listType in ["Checklists", "Find Results"]:
@@ -1056,7 +1060,6 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
             sub.mdiParent = self.mdiParent
             sub.FillSpecies(filter)
             
-        sub.mdiParent = self.mdiParent
         self.parent().parent().addSubWindow(sub)
         self.mdiParent.PositionChildWindow(sub, self)        
         sub.show() 

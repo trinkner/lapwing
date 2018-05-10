@@ -4,6 +4,7 @@ import code_Filter
 import code_Location
 import code_Individual
 import code_Lists
+import code_MapHtml
 
 # import basic Python libraries
 from copy import deepcopy
@@ -432,7 +433,7 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
     def FillMap(self):
         
         coordinatesDict = defaultdict()
-        mapWidth = self.width() -20
+        mapWidth = self.width() - 20
         mapHeight = self.height() - self.lblLocation.height() - (self.lblDateRange.height() * 7.5)
         self.webMap.setGeometry(5, 5, mapWidth, mapHeight)
 
@@ -440,75 +441,14 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
             locationName = self.lstLocations.item(l).text()
             coordinates = self.mdiParent.db.GetLocationCoordinates(locationName)
             coordinatesDict[locationName] = coordinates
-            
-        mapHtml = """
 
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <title>Locations Map</title>
-            <meta name="viewport" content="initial-scale=1.0">
-            <meta charset="utf-8">
-            <style>            
-            * {
-                font-size: 75%;
-                font-family: "Times New Roman", Times, serif;
-                }
-            #map {
-                height: 100%;
-                }
-            html, body {
-            """
-        mapHtml = mapHtml + "height: " + str(mapHeight -10) + "px;"
-        mapHtml = mapHtml + "width: " + str(mapWidth -10)  + "px;"
-            
-        mapHtml = mapHtml + """
-                margin: 0;
-                padding: 0;
-                }
-            </style>
-            </head>
-            <body>
-            <div id="map"></div>
-            <script>
-            var map;
-
-            function initMap() {
-                map = new google.maps.Map(document.getElementById('map'), {
-                    zoom: 5
-                });
-                
-                var bounds = new google.maps.LatLngBounds();
-                """
-        for c in coordinatesDict.keys():
-            mapHtml = mapHtml + """
-                var marker = new google.maps.Marker({
-                """
-            mapHtml = mapHtml + "position: {lat: " + coordinatesDict[c][0] + ", lng: " + coordinatesDict[c][1] + "},"
-            
-            mapHtml = mapHtml + """
-                    map: map,
-                    title: '"""
-            mapHtml = mapHtml + c
-            mapHtml = mapHtml + """'
-                    }); 
-                bounds.extend(marker.getPosition());                    
-                
-            """    
-        mapHtml = mapHtml + """
-            
-                map.setCenter(bounds.getCenter());
-                
-                map.fitBounds(bounds);
-            }
-            
-            </script>
-            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjVuwWvZmRlD5n-Jj2Jh_76njXxldDgug&callback=initMap" async defer></script>
-            </body>
-            </html>        
-            """
+        thisMap = code_MapHtml.MapHtml()
+        thisMap.mapHeight = mapHeight -20
+        thisMap.mapWidth = mapWidth -20
+        thisMap.coordinatesDict = coordinatesDict
+                    
         # save mapHtml in object's variable so we can reload it later
-        self.mapHtml = mapHtml
+        self.mapHtml = thisMap.html()
                 
         # pass the mapHtml we created to the QWebView widget for display                    
         self.webMap.setHtml(self.mapHtml)
@@ -562,13 +502,12 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
             # species column has been clicked so create individual window for that species
             species = self.tblSpecies.item(currentRow,  1).data(Qt.UserRole)
             sub = code_Individual.Individual()
-            sub.FillIndividual(species)
-        
-        sub.mdiParent = self.mdiParent
-        self.parent().parent().addSubWindow(sub)
-        self.mdiParent.PositionChildWindow(sub, self)        
-        sub.show() 
-        sub.resizeMe()
+            sub.mdiParent = self.mdiParent
+            sub.FillIndividual(species)        
+            self.parent().parent().addSubWindow(sub)
+            self.mdiParent.PositionChildWindow(sub, self)        
+            sub.show() 
+            sub.resizeMe()
         
         if currentColumn > 1:
             # date column has been clicked so create species list frame for that dateArray
@@ -578,7 +517,12 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
             tempFilter.setEndDate(date)
             
             sub = code_Lists.Lists()
+            sub.mdiParent = self.mdiParent
             sub.FillSpecies(tempFilter)
+            self.parent().parent().addSubWindow(sub)
+            self.mdiParent.PositionChildWindow(sub, self)        
+            sub.show() 
+            sub.resizeMe()
 
         QApplication.restoreOverrideCursor() 
         

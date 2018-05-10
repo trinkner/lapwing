@@ -1,6 +1,5 @@
 # import the GUI forms that we create with Qt Creator
 import form_Web
-import code_MapHtml
 
 # import the Qt components we'll use
 # do this so later we won't have to clutter our code with references to parent Qt classes 
@@ -146,7 +145,7 @@ class Web(QMdiSubWindow, form_Web.Ui_frmWeb):
                 }
             </style>
             </head>
-            <body>
+            <body bgcolor="#98FB98">
             <h1>
             Lapwing
             </h1>
@@ -174,10 +173,7 @@ class Web(QMdiSubWindow, form_Web.Ui_frmWeb):
             PyQt, by Riverbank Computing, is licensed under the GNU General Public License.
             </li>
             <li>
-            Map base layers are retrieved from Google.
-            </li>            
-            <li>
-            Map layers that include points and location labels are generated using OpenLayers. OpenLayers is free, Open Source JavaScript, released under the 2-clause BSD License (also known as the FreeBSD).
+            Qt, by the Qt Company, is licensed under the (L)GPL Lesser General Public License.
             </li>
             <li>
             PyInstaller, by the PyInstaller Development Team, Giovanni Bajo and McMillan Enterprise, is licensed under the GPL General Public License.
@@ -226,13 +222,73 @@ class Web(QMdiSubWindow, form_Web.Ui_frmWeb):
         for l in locations:
             coordinates = self.mdiParent.db.GetLocationCoordinates(l)
             coordinatesDict[l] = coordinates
+            
+        html = """
 
-        thisMap = code_MapHtml.MapHtml()
-        thisMap.mapHeight = mapHeight
-        thisMap.mapWidth = mapWidth
-        thisMap.coordinatesDict = coordinatesDict
-        
-        html = thisMap.html()
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <title>Locations Map</title>
+            <meta name="viewport" content="initial-scale=1.0">
+            <meta charset="utf-8">
+            <style>
+            * {
+                font-size: 75%;
+                font-family: "Times New Roman", Times, serif;
+                }
+            #map {
+                height: 100%;
+                }
+            html, body {
+            """
+        html = html + "height: " + str(mapHeight) + "px;"
+        html = html + "width: " + str(mapWidth)  + "px;"
+            
+        html = html + """
+                margin: 0;
+                padding: 0;
+                }
+            </style>
+            </head>
+            <body>
+            <div id="map"></div>
+            <script>
+            var map;
+
+            function initMap() {
+                map = new google.maps.Map(document.getElementById('map'), {
+                    zoom: 5
+                });
+                
+                var bounds = new google.maps.LatLngBounds();
+                """
+        for c in coordinatesDict.keys():
+            html = html + """
+                var marker = new google.maps.Marker({
+                """
+            html = html + "position: {lat: " + coordinatesDict[c][0] + ", lng: " + coordinatesDict[c][1] + "},"
+            
+            html = html + """
+                    map: map,
+                    title: """
+            html = html + '"' + c + '"'
+            html = html + """
+                    }); 
+                bounds.extend(marker.getPosition());                    
+                
+            """    
+        html = html + """
+            
+                map.setCenter(bounds.getCenter());
+                
+                map.fitBounds(bounds);
+            }
+            
+            </script>
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDjVuwWvZmRlD5n-Jj2Jh_76njXxldDgug&callback=initMap" async defer></script>
+            </body>
+            </html>        
+            """
         
         self.webView.setHtml(html)
         

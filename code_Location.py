@@ -4,7 +4,9 @@ import form_Location
 # import classes from other project files
 import code_Filter
 import code_Lists
+import code_MapHtml
 import code_Individual
+from collections import defaultdict
 
 # import the Qt components we'll use
 # do this so later we won't have to clutter our code with references to parent Qt classes 
@@ -17,7 +19,6 @@ from PyQt5.QtGui import (
 from PyQt5.QtCore import (
     Qt,
     pyqtSignal,
-    QUrl,
     QIODevice,
     QByteArray,
     QBuffer,    
@@ -61,7 +62,6 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
         self.horizontalLayout_2.setContentsMargins(5, 5, 5, 5)
         self.horizontalLayout_2.setSpacing(4)
         self.webMap = QWebEngineView(self.tabMap)
-        self.webMap.setUrl(QUrl("about:blank"))
         self.webMap.setObjectName("webMap")
         self.horizontalLayout_2.addWidget(self.webMap)  
         self.tabLocation.setCurrentIndex(0)
@@ -133,6 +133,7 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
 
 
     def FillLocation(self, location):
+        self.location = location
         thisLocationDates= []
         
         filter = code_Filter.Filter()
@@ -197,85 +198,31 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
         self.tblDates.sortItems(0,0)
         self.tblDates.setCurrentCell(0, 1)
             
-        coordinates = self.mdiParent.db.GetLocationCoordinates(location)
+        self.coordinates = self.mdiParent.db.GetLocationCoordinates(location)
 
         # display the species in the species for date list
         self.FillSpeciesForDate()
         # display the main all-species list
         self.FillSpecies()
-        # display the Google map
-        self.FillMap(coordinates)
-        
+                
         self.scaleMe()
         self.resizeMe()
 
 
-    def FillMap(self,  coordinates):
-        
-        # assemble html and javascript to pass to Google Maps
-        # using a simple URL would not let us have a clean map without the Google search bar, etc.
-        
-        html = """<!DOCTYPE html>
-                            <html>
-                              <head>
-                                <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-                                <meta charset="utf-8">
-                                <title>Location Map</title>
-                                <style>"""
-        # we need to add the # character here, so escape it with quotes
-        html = html + '#' 
-        html = html + """map {
-                                    height: 100%;
-                                  }
-                                  html, body {
-                                    height: 100%;
-                                    margin: 0;
-                                    padding: 0;
-                                  }
-                                </style>
-                              </head>
-                              <body>
-                                <div id="map"></div>
-                                <script>
-                                  function initMap() {
-                                  
-                                    var markerLatLng = {lat: """
-                                    
-        # set the coordinates for the marker
-        html = html + coordinates[0] + ",  lng: " + coordinates[1] + "};"
-        html = html + """       
+    def FillMap(self):
 
-                                    var myLatLngCenter = {lat: """
-                                    
-        # set the coordinates for the map center 
-        #(we adjust because it doesn't seem to center accurately otherwise)
-        # we increase the latitude and decrease the longitude to get the correct center
-#        html = html + str(float(coordinates[0]) + .02442906) +  ",  lng: " + str(float(coordinates[1]) - .0642) + "};"
-        html = html + str(float(coordinates[0])) +  ",  lng: " + str(float(coordinates[1])) + "};"
-        html = html + """       
-                
-                                    var map = new google.maps.Map(document.getElementById('map'), {
-                                      zoom: 13,
-                                      center: myLatLngCenter
-                                    });
-                                    var marker = new google.maps.Marker({
-                                      position: markerLatLng,
-                                      map: map,
-                                      title: 'eBird Location!'
-                                    });
-                                  }
-                                </script>
-                                <script async defer
-                                src="https://maps.googleapis.com/maps/api/js?key="""
-                                
-        # add the Google Maps API key unique to this project
-        html = html + "AIzaSyDjVuwWvZmRlD5n-Jj2Jh_76njXxldDgug"
+        coordinatesDict = defaultdict()
+        coordinatesDict[self.location] = self.coordinates
+
+        mapWidth = self.width() - 40
+        mapHeight= self.height() - 170
+
+        thisMap = code_MapHtml.MapHtml()
+        thisMap.mapHeight = mapHeight
+        thisMap.mapWidth = mapWidth
+        thisMap.coordinatesDict = coordinatesDict
         
-        html = html +"""&callback=initMap">
-                                </script>
-                              </body>
-                            </html>"""
-        # pass the html we created to the QWebView widget for display                    
+        html = thisMap.html()        
         self.webMap.setHtml(html)
 
 
@@ -521,13 +468,14 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
         windowWidth =  self.frameGeometry().width()
         windowHeight = self.frameGeometry().height()
         self.scrollArea.setGeometry(5, 27, windowWidth -10 , windowHeight-35)
+        self.FillMap()
 
 
     def scaleMe(self):
                
         scaleFactor = self.mdiParent.scaleFactor
-        windowWidth =  780  * scaleFactor
-        windowHeight = 500 * scaleFactor            
+        windowWidth =  800  * scaleFactor
+        windowHeight = 600 * scaleFactor            
         self.resize(windowWidth, windowHeight)
         
         fontSize = self.mdiParent.fontSize
@@ -566,3 +514,4 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
         for R in range(self.tblDates.rowCount()):
             self.tblDates.setRowHeight(R, dateTextHeight)
         
+        self.FillMap()

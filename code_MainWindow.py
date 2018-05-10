@@ -57,7 +57,7 @@ class MainWindow(QMainWindow, form_MDIMain.Ui_MainWindow):
     fontSize = 11
     scaleFactor = 1
     versionNumber = "0.1"
-    versionDate = "March 8, 2018"    
+    versionDate = "May 10, 2018"    
 
     def __init__(self):
         super(self.__class__, self).__init__()
@@ -1485,7 +1485,7 @@ class MainWindow(QMainWindow, form_MDIMain.Ui_MainWindow):
             if thisFamily == "**All Families**":
                 self.cboFamilies.setStyleSheet("");                
                 self.cboSpecies.addItem("**All Species**")
-                if self.cboOrders.currentText() == "All Orders":
+                if self.cboOrders.currentText() == "**All Orders**":
                     speciesList = MainWindow.db.speciesDict.keys()
                     speciesList = list(speciesList)
                 else:
