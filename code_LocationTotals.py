@@ -342,36 +342,37 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
         for s in minimalSightingList:
             
             # Consider only full species, not slash or spuh entries
-            if ("/" not in s[1]) and ("sp." not in s[1]):
+            commonName = s["commonName"]
+            if ("/" not in commonName) and ("sp." not in commonName):
                 
                 if self.mdiParent.db.TestSighting(s,  filter) is True:
-                    dbCountries.add(s[5][0:2])
-                    dbStates.add(s[5])
-                    if s[6] != "":
-                        dbCounties.add(s[6])
-                    dbLocations.add(s[7])
+                    dbCountries.add(s["country"])
+                    dbStates.add(s["state"])
+                    if s["county"] != "":
+                        dbCounties.add(s["county"])
+                    dbLocations.add(s["location"])
                     
                     # create dictionaries of country, state, county, and location sighting for faster lookup
-                    if s[5][0:2] not in countryDict.keys():
-                        countryDict[s[5][0:2]] = [s]
+                    if s["country"] not in countryDict.keys():
+                        countryDict[s["country"]] = [s]
                     else:
-                        countryDict[s[5][0:2]].append(s)                
+                        countryDict[s["country"]].append(s)                
                     
-                    if s[5] not in stateDict.keys():
-                        stateDict[s[5]] = [s]
+                    if s["state"] not in stateDict.keys():
+                        stateDict[s["state"]] = [s]
                     else:
-                        stateDict[s[5]].append(s)                
+                        stateDict[s["state"]].append(s)                
                                  
-                    if s[6] != "":
-                        if s[6] not in countyDict.keys():
-                            countyDict[s[6]] = [s]
+                    if s["county"] != "":
+                        if s["county"] not in countyDict.keys():
+                            countyDict[s["county"]] = [s]
                         else:
-                            countyDict[s[6]].append(s)       
+                            countyDict[s["county"]].append(s)       
                                  
-                    if s[7] not in locationDict.keys():
-                        locationDict[s[7]] = [s]
+                    if s["location"] not in locationDict.keys():
+                        locationDict[s["location"]] = [s]
                     else:
-                        locationDict[s[7]].append(s)           
+                        locationDict[s["location"]].append(s)           
         
         # check if no sightings were found. Return false if none found. Abort and display message.
         if len(countryDict) + len(stateDict) + len(countyDict) + len(locationDict) == 0:
@@ -397,8 +398,8 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
             countrySpecies = set()
             countryChecklists = set()
             for s in countryDict[country]:
-                countrySpecies.add(s[1])
-                countryChecklists.add(s[0])
+                countrySpecies.add(s["commonName"])
+                countryChecklists.add(s["checklistID"])
             countryArray.append([len(countrySpecies),  country, len(countryChecklists)])
         countryArray.sort(reverse=True)
         R = 0
@@ -425,8 +426,8 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
             stateSpecies = set()
             stateChecklists = set()
             for s in stateDict[state]:
-                stateSpecies.add(s[1])
-                stateChecklists.add(s[0])
+                stateSpecies.add(s["commonName"])
+                stateChecklists.add(s["checklistID"])
             stateArray.append([len(stateSpecies),  state, len(stateChecklists)])
         stateArray.sort(reverse=True)
         R = 0
@@ -453,8 +454,8 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
                 countySpecies = set()
                 countyChecklists = set()
                 for s in countyDict[county]:
-                    countySpecies.add(s[1])
-                    countyChecklists.add(s[0])
+                    countySpecies.add(s["commonName"])
+                    countyChecklists.add(s["checklistID"])
                 countyArray.append([len(countySpecies),  county, len(countyChecklists)])
         countyArray.sort(reverse=True)
         R = 0
@@ -481,8 +482,8 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
                 locationSpecies = set()
                 locationChecklists = set()
                 for s in locationDict[location]:
-                    locationSpecies.add(s[1])
-                    locationChecklists.add(s[0])
+                    locationSpecies.add(s["commonName"])
+                    locationChecklists.add(s["checklistID"])
                 locationArray.append([len(locationSpecies),  location, len(locationChecklists)])
         locationArray.sort(reverse=True)
         rank = 0

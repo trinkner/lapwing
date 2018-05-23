@@ -152,6 +152,7 @@ class DataBase():
 
     def ReadDataFile(self, DataFile):
         
+        # extract data from zip file if user has chosen a zip file
         if os.path.splitext(DataFile[0])[1] == ".zip":   
             
             filehandle = open(DataFile[0], 'rb')
@@ -168,151 +169,201 @@ class DataBase():
                 msg.setStandardButtons(QMessageBox.Ok)
                 msg.exec_()   
                 return
-                
+        
+        # use csv reader to process csv file if user has selected a csv file
         if os.path.splitext(DataFile[0])[1] == ".csv":        
             csvfile = open(DataFile[0], 'r')
         
-        # try to process it's CSV values. Go to except if we have problems
-        try:
-            csvdata = csv.reader(csvfile, delimiter=',', quotechar='"')
+        # try to process CSV values from csvfile. Go to except if we have problems
+#        try:
+        csvdata = csv.reader(csvfile, delimiter=',', quotechar='"')
+        
+        # initialize temporary list variable to hold location data 
+        thisMasterLocationEntry = []
+        
+        for line in csvdata:
+                            
+            # convert date format from mm-dd-yyyy to yyyy-mm-dd for international standard and sorting ability
+            line[10] = line[10][6:]+ "-" + line[10][0:2] + "-" + line[10][3:5]
             
-            # initialize temporary list variable to hold location data 
-            thisMasterLocationEntry = []
+            # append state name in parentheses to county name to differentiate between
+            # counties that have the same name but are in different states
+            if line[6] != "":
+                line[6] =  line[6] + " (" + line[5] + ")" 
             
-            for line in csvdata:
-                                
-                # convert date format from mm-dd-yyyy to yyyy-mm-dd for international standard and sorting ability
-                line[10] = line[10][6:]+ "-" + line[10][0:2] + "-" + line[10][3:5]
-                
-                # append state name in parentheses to county name to differentiate between
-                # counties that have the same name but are in different states
-                if line[6] != "":
-                    line[6] =  line[6] + " (" + line[5] + ")" 
-                
-                # add blank elements to list so we can later add family and order names if taxonomic file exists
-                # also add blank line for subspecies name
-                while len(line) < 24:
-                    line.append("")
-                
-                # store full name (maybe a subspecies) in sighting
-                subspeciesName = deepcopy(line[1])
-                line[23]= subspeciesName
-                
-                # remove any subspecies data in parentheses in species name
-                if "(" in line[1]:
-                    line[1] = line[1][:line[1].index("(")-1]    
-                 
-                # convert 12-hour time format to 24-hour format for easier sorting and display
-                time = line[11]
-                if "AM" in time:
-                    time = line[11][0:5]
-                if "PM" in time:
-                    time = line[11][0:5]
-                    hour = int(line[11][0:2])
-                    hour = str(hour + 12)
-                    if hour == "24":
-                        hour = "12"
-                    time = hour + line[11][2:5]  
-                line[11] = time
-                
-                # add sighting to the main database for use by later searches etc.
-                # this sightingList will be used in nearly every search performed by user
-                self.sightingList.append(line)
+            # add blank elements to list so we can later add family and order names if taxonomic file exists
+            # also add blank line for subspecies name
+            while len(line) < 24:
+                line.append("")
+            
+            # store full name (maybe a subspecies) in sighting
+            subspeciesName = deepcopy(line[1])
+            line[23]= subspeciesName
+            
+            # remove any subspecies data in parentheses in species name
+            if "(" in line[1]:
+                line[1] = line[1][:line[1].index("(")-1]    
+             
+            # convert 12-hour time format to 24-hour format for easier sorting and display
+            time = line[11]
+            if "AM" in time:
+                time = line[11][0:5]
+            if "PM" in time:
+                time = line[11][0:5]
+                hour = int(line[11][0:2])
+                hour = str(hour + 12)
+                if hour == "24":
+                    hour = "12"
+                time = hour + line[11][2:5]  
+            line[11] = time
+            
+            # add sighting to the main database for use by later searches etc.
+            # this sightingList will be used in nearly every search performed by user
+            
+            # convert line's CSV data into a dictionary for code legibility
+            thisSightingDict = defaultdict(
+                checklistID = line[0],
+                commonName = line[1],
+                scientificName = line[2],
+                subspeciesName= line[23],
+                taxonomicOrder = line[3],
+                count = line[4],
+                country = line[5][0:2],
+                state = line[5],
+                county = line[6],
+                location = line[7],
+                latitude = line[8],
+                longitude = line[9],
+                date = line[10],
+                time = line[11],
+                protocol = line[12],
+                duration = line[13],
+                allObsReported = line[14],
+                distance = line[15],
+                areaCovered = line[16],
+                observers = line[17],
+                breedingCode = line[18],
+                speciesComments = line[19],
+                checklistComments = line[20]
+                )
+            
+            self.sightingList.append(thisSightingDict)
 
-                #add sighting to checklistDict, even if it's a sp or / species
-                if line[0] not in self.checklistDict.keys():
-                    self.checklistDict[line[0]] = [line]
+            #add sighting to checklistDict, even if it's a sp or / species
+            # use checklistID as the key
+            checklistID = thisSightingDict["checklistID"]
+            if checklistID not in self.checklistDict.keys():
+                self.checklistDict[checklistID] = [thisSightingDict]
+            else:
+                self.checklistDict[checklistID].append(thisSightingDict)  
+
+            #add sighting to other dicts only if it's a full species, not a / or sp.
+            commonName = thisSightingDict["commonName"]
+            if ("/" not in commonName) and ("sp." not in commonName):
+                # use species common name as key
+                if commonName not in self.speciesDict.keys():
+                    self.speciesDict[commonName] = [thisSightingDict]
                 else:
-                    self.checklistDict[line[0]].append(line)  
-
-                #add sighting to other dicts only if it's a full species, not a / or sp.
-                if ("/" not in line[1]) and ("sp." not in line[1]):
-                    if line[1] not in self.speciesDict.keys():
-                        self.speciesDict[line[1]] = [line]
-                    else:
-                        self.speciesDict[line[1]].append(line)                                
-                
-                    # also add subspecies as key to speciesDict 
-                    # to faciliate lookup
-                    if line[23] not in self.speciesDict.keys():
-                        self.speciesDict[line[23]] = [line]
-                    else:
-                        self.speciesDict[line[23]].append(line) 
-                    
-                    #add sighting to yearDict
-                    if line[10][0:4] not in self.yearDict.keys():
-                        self.yearDict[line[10][0:4]] = [line]
-                    else:
-                        self.yearDict[line[10][0:4]].append(line)
-                        
-                    #add sighting to monthDict
-                    if line[10][5:7] not in self.monthDict.keys():
-                        self.monthDict[line[10][5:7]] = [line]
-                    else:
-                        self.monthDict[line[10][5:7]].append(line)      
-                        
-                    #add sighting to dateDict
-                    if line[10] not in self.dateDict.keys():
-                        self.dateDict[line[10]] = [line]
-                    else:
-                        self.dateDict[line[10]].append(line)                                        
-                        
-                    #add sighting to countryDict
-                    if line[5][0:2] not in self.countryDict.keys():
-                        self.countryDict[line[5][0:2]] = [line]
-                    else:
-                        self.countryDict[line[5][0:2]].append(line)                                
-                        
-                    #add sighting to stateDict
-                    if line[5] not in self.stateDict.keys():
-                        self.stateDict[line[5]] = [line]
-                    else:
-                        self.stateDict[line[5]].append(line)                                
-
-                    #add sighting to countyDict
-                    if line[6] != "":
-                        if line[6] not in self.countyDict.keys():
-                            self.countyDict[line[6]] = [line]
-                        else:
-                            self.countyDict[line[6]].append(line)                                
-                        
-                    #add sighting to locationDict
-                    if line[7] not in self.locationDict.keys():
-                        self.locationDict[line[7]] = [line]
-                    else:
-                        self.locationDict[line[7]].append(line)          
-                
-                # get just the location data from this particular sighting
-                thisMasterLocationEntry = [line[5][0:2],  line[5],  line[6],  line[7]]
-                
-                # if this location isn't already in the cache, save it for future use
-                if thisMasterLocationEntry not in self.masterLocationList:
-                    self.masterLocationList.append(thisMasterLocationEntry)
-                    self.allSpeciesList.append(line[1])
-                    self.countryList.append(line[5][0:2])
-                    self.stateList.append(line[5])
-                    if line[6] != "":
-                        self.countyList.append(line[6])
-                    self.locationList.append(line[7])
+                    self.speciesDict[commonName].append(thisSightingDict)                                
             
-        except (IndexError,  RuntimeError, TypeError, NameError, KeyError):
-            self.allSpeciesList = []
-            self.currentSpeciesList = []
-            self.masterLocationList = []
-            self.countryList = []
-            self.stateList = []
-            self.countyList = []
-            self.locationList = []
-            self.sightingList = []
-            self.eBirdFileOpenFlag = False
-            msg = QMessageBox()
-            msg.setIcon(QMessageBox.Warning)
-            msg.setText("The file failed to load.\n\nPlease check that it is a valid eBird data file.\n")
-            msg.setWindowTitle("File failed to load")
-            msg.setStandardButtons(QMessageBox.Ok)
-            msg.exec_()   
-            csvfile.close()                 
-            return
+                # also add subspecies as key to speciesDict 
+                # to faciliate lookup
+                subspeciesName = thisSightingDict["subspeciesName"]
+                if subspeciesName not in self.speciesDict.keys():
+                    self.speciesDict[subspeciesName] = [thisSightingDict]
+                else:
+                    self.speciesDict[subspeciesName].append(thisSightingDict) 
+                
+                # add sighting to yearDict
+                # use 4-digit year as the key
+                year = thisSightingDict["date"][0:4]
+                if year not in self.yearDict.keys():
+                    self.yearDict[year] = [thisSightingDict]
+                else:
+                    self.yearDict[year].append(thisSightingDict)
+                    
+                # add sighting to monthDict
+                # use 2-digit month as the key
+                month = thisSightingDict["date"][5:7]
+                if month not in self.monthDict.keys():
+                    self.monthDict[month] = [thisSightingDict]
+                else:
+                    self.monthDict[month].append(thisSightingDict)      
+                    
+                # add sighting to dateDict
+                # use full date (yyyy-mm-dd) as the key
+                date = thisSightingDict["date"]
+                if date not in self.dateDict.keys():
+                    self.dateDict[date] = [thisSightingDict]
+                else:
+                    self.dateDict[date].append(thisSightingDict)                                        
+                    
+                # add sighting to countryDict
+                # use 2-character code as key
+                country = thisSightingDict["country"]
+                if country not in self.countryDict.keys():
+                    self.countryDict[country] = [thisSightingDict]
+                else:
+                    self.countryDict[country].append(thisSightingDict)                                
+                    
+                # add sighting to stateDict
+                # use cc-ss code as the key
+                state = thisSightingDict["state"]
+                if state not in self.stateDict.keys():
+                    self.stateDict[state] = [thisSightingDict]
+                else:
+                    self.stateDict[state].append(thisSightingDict)                                
+
+                # add sighting to countyDict
+                # use county name as key
+                # don't add sightings whose county name is absent
+                county = thisSightingDict["county"]
+                if county != "":
+                    if county not in self.countyDict.keys():
+                        self.countyDict[county] = [thisSightingDict]
+                    else:
+                        self.countyDict[county].append(thisSightingDict)                                
+                    
+                # add sighting to locationDict
+                # use location name as key
+                location = thisSightingDict["location"]
+                if location not in self.locationDict.keys():
+                    self.locationDict[location] = [thisSightingDict]
+                else:
+                    self.locationDict[location].append(thisSightingDict)          
+            
+            # get just the location data from this particular sighting
+            thisMasterLocationEntry = [country,  state,  county,  location]
+            
+            # if this location isn't already in the list, add it
+            # we use this list later for populating the filter list of countries, states, counties, locations
+            if thisMasterLocationEntry not in self.masterLocationList:
+                self.masterLocationList.append(thisMasterLocationEntry)
+                self.allSpeciesList.append(commonName)
+                self.countryList.append(country)
+                self.stateList.append(state)
+                if county != "":
+                    self.countyList.append(county)
+                self.locationList.append(location)
+            
+#        except (IndexError,  RuntimeError, TypeError, NameError, KeyError):
+#            self.allSpeciesList = []
+#            self.currentSpeciesList = []
+#            self.masterLocationList = []
+#            self.countryList = []
+#            self.stateList = []
+#            self.countyList = []
+#            self.locationList = []
+#            self.sightingList = []
+#            self.eBirdFileOpenFlag = False
+#            msg = QMessageBox()
+#            msg.setIcon(QMessageBox.Warning)
+#            msg.setText("The file failed to load.\n\nPlease check that it is a valid eBird data file.\n")
+#            msg.setWindowTitle("File failed to load")
+#            msg.setStandardButtons(QMessageBox.Ok)
+#            msg.exec_()   
+#            csvfile.close()                 
+#            return
         
         csvfile.close()
         
@@ -340,15 +391,13 @@ class DataBase():
         countyNamesWithoutParens = []
         countyKeyChanges = []
         for cdk in self.countyDict.keys():
-            if cdk != "":
-                countyNamesWithoutParens.append(cdk.split(" (")[0])
+            countyNamesWithoutParens.append(cdk.split(" (")[0])
         
         for cdk in self.countyDict.keys():
-            if cdk != "":
-                if countyNamesWithoutParens.count((cdk.split(" (")[0])) == 1:
-                    for s in self.countyDict[cdk]:
-                        s[6] = cdk.split(" (")[0]
-                    countyKeyChanges.append([cdk,  cdk.split(" (")[0]])
+            if countyNamesWithoutParens.count((cdk.split(" (")[0])) == 1:
+                for s in self.countyDict[cdk]:
+                    s["county"] = cdk.split(" (")[0]
+                countyKeyChanges.append([cdk,  cdk.split(" (")[0]])
         
         for ckc in countyKeyChanges:
             self.countyDict[str(ckc[1])] = self.countyDict.pop(str(ckc[0]))
@@ -384,13 +433,13 @@ class DataBase():
 
             # if this species already has a order/family found, no need to search database again.
             # But if species does not have order/family found, we need to get search the database
-            if thisSciName != s[2]:
+            if thisSciName != s["scientificName"]:
 
                 for line in taxonomyData:
 
                     # if species matches, save the order and family names for the next time we find the species
                     # species will be found in the sighting file in taxonomic order, so each species will be chunked together
-                    if s[2] == line[4]:  # sci names match                   
+                    if s["scientificName"] == line[4]:  # sci names match                   
                         
                         thisSciName = line[4]
                         thisOrder= line[5]
@@ -407,21 +456,21 @@ class DataBase():
 
                         #add species to orderSpeciesDict:
                         if thisOrder not in self.orderSpeciesDict.keys():
-                            self.orderSpeciesDict[thisOrder] = [s[1]]
+                            self.orderSpeciesDict[thisOrder] = [s["commonName"]]
                         else:
-                            self.orderSpeciesDict[thisOrder].append(s[1]) 
+                            self.orderSpeciesDict[thisOrder].append(s["commonName"]) 
                             
                         #add species to familySpeciesDict:
                         if thisFamily not in self.familySpeciesDict.keys():
-                            self.familySpeciesDict[thisFamily] = [s[1]]
+                            self.familySpeciesDict[thisFamily] = [s["commonName"]]
                         else:
-                            self.familySpeciesDict[thisFamily].append(s[1]) 
+                            self.familySpeciesDict[thisFamily].append(s["commonName"]) 
                                     
                         break
 
             # append the order and family names to the species in the sighting list.
-            s[21] = thisOrder
-            s[22] = thisFamily
+            s["order"] = thisOrder
+            s["family"] = thisFamily
 
         csvfile.close()
 
@@ -436,10 +485,10 @@ class DataBase():
         # for each sighting, test date if necessary. Append new dates to return list.
         # don't consider spuh or slash species
         for s in filteredSightingList:
-            if "sp." not in s[1] and "/" not in s[1]:
+            if "sp." not in s["commonName"] and "/" not in s["commonName"]:
                 if self.TestSighting(s,  filter) is True:
-                    if s[22] not in familiesList:
-                        familiesList.append(s[22])
+                    if s["family"] not in familiesList:
+                        familiesList.append(s["family"])
         
         return(familiesList)
 
@@ -452,7 +501,8 @@ class DataBase():
         for s in filteredSightingList:
             # this is not a single checklist, so remove spuh and slash sightings
             if filter.getChecklistID() == "":
-                if "/" not in s[1] and "sp." not in s[1]:
+                commonName = s["commonName"]
+                if "/" not in commonName and "sp." not in commonName:
                     if self.TestSighting(s,  filter) is True:
                         returnList.append(s)
             else:
@@ -470,11 +520,11 @@ class DataBase():
         if filteredSightingList == []:
             filteredSightingList = self.GetMinimalFilteredSightingsList(filter)
         
-        # for each sighting, test date if necessary. Append new dates to return list.
+        # for each sighting, test filter. Append filtered species to return list.
         for s in filteredSightingList:
             if self.TestSighting(s,  filter) is True:
-                if s[1] not in speciesList:
-                    speciesList.append(s[1])
+                if s["commonName"] not in speciesList:
+                    speciesList.append(s["commonName"])
         
         return(speciesList)
 
@@ -490,7 +540,6 @@ class DataBase():
         locationName = filter.getLocationName()
         checklistID = filter.getChecklistID()
         
-        # if no filteredSightingList is specified, create one.
         # use narrowest subset possible, according to filter            
         if checklistID != "":
             returnList = self.checklistDict[checklistID]
@@ -539,13 +588,14 @@ class DataBase():
                 # include the taxonomy entry so we can sort the list by taxonomy later
                 # include the main species name so we can store it in SpeciesList hidden data
                 # include the checklist number so we can count checklists for each species
-                thisDateTaxSpecies = [sighting[10],  sighting[3],  sighting[1], sighting[0]]
+                thisDateTaxSpecies = [sighting["date"],  sighting["taxonomicOrder"],  sighting["commonName"], sighting["checklistID"]]
+                
                 
                 # decide whether we're returning only species or also subspecies
                 if includeSpecies == "Species":
-                    key = sighting[1]
+                    key = sighting["commonName"]
                 if includeSpecies == "Subspecies":
-                    key = sighting[23]
+                    key = sighting["subspeciesName"]
                 
                 # add the date and taxonomy number to a temp dictionary 
                 # we'll use this dictionary later to find the first and last dates
@@ -562,7 +612,7 @@ class DataBase():
                     checklistIDs[key].append(thisDateTaxSpecies[3])       
        
                 # add checklistID to allChecklist set so we can count all the checklists later
-                allChecklists.add(sighting[0])
+                allChecklists.add(sighting["checklistID"])
     
         # get the total number of checklists so we can compute percentages 
         # of checklists for each species
@@ -609,7 +659,7 @@ class DataBase():
             isSeenNowhereElse = True
             for s in filteredSightingList:
                 if self.TestSighting(s,  filter) is True:
-                    if s[1] == species and s[7] != location:
+                    if s["commonName"] == species and s["location"] != location:
                         isSeenNowhereElse = False
                         break
                 
@@ -630,7 +680,7 @@ class DataBase():
         endSeasonalMonth  = filter.getEndSeasonalMonth()    # str   format  dd
         endSeasonalDay  = filter.getEndSeasonalDay()               # str   format dd
         checklistID = filter.getChecklistID()                                     # str   checklistID
-        sightingDate = sighting[10]                                                    # str   format yyyy-mm-dd
+        sightingDate = sighting["date"]                                                    # str   format yyyy-mm-dd
         speciesName = filter.getSpeciesName()                            # str   species Name
         speciesList = filter.getSpeciesList()                                      # list of species names
         order = filter.getOrder()                                                         # str   order name
@@ -642,48 +692,48 @@ class DataBase():
 
         # if a checklistID has been specified, check if sighting matches
         if checklistID != "":
-            if checklistID != sighting[0]:
+            if checklistID != sighting["checklistID"]:
                 return(False)
 
         # if speciesName has been specified, check it
         if speciesName != "":
-            if speciesName != sighting[1] and speciesName != sighting[23]:
+            if speciesName != sighting["commonName"] and speciesName != sighting["subspeciesName"]:
                 return(False)
 
         # if order  has been specified, check it
         if order != "":
-            if order != sighting[21]:
+            if order != sighting["order"]:
                 return(False)
 
         # if family  has been specified, check it
         if family != "":
-            if family != sighting[22]:
+            if family != sighting["family"]:
                 return(False)
                 
         # if speciesList has been specified, check it
         if speciesList != []:
-            if sighting[1] not in speciesList:
+            if sighting["commonName"] not in speciesList:
                 return(False)                    
 
-        # if family  has been specified, check it
+        # if time has been specified, check it
         if time != "":
-            if time != sighting[11]:
+            if time != sighting["time"]:
                 return(False)
                 
         # check if location matches for sighting; flag species that fit the location
         # no need to check if locationType is ""
         if not locationType == "":
             if locationType == "Country":
-                if not locationName == sighting[5][0:2]:
+                if not locationName == sighting["country"]:
                     return(False)
             if locationType == "State":
-                if not locationName == sighting[5]:
+                if not locationName == sighting["state"]:
                     return(False)   
             if locationType == "County":
-                if not locationName == sighting[6]:
+                if not locationName == sighting["county"]:
                     return(False)
             if locationType == "Location":
-                if not locationName == sighting[7]:
+                if not locationName == sighting["location"]:
                     return(False)                    
         
         # check date for matches for sighting range or seasonal range; disqualify sighting if date doesn't fit specific date range
@@ -762,9 +812,9 @@ class DataBase():
         for s in filteredSightingList:
             if needToCheckFilter is True:
                 if self.TestSighting(s,  filter) is True:
-                    dateList.add(s[10])
+                    dateList.add(s["date"])
             else:
-                dateList.add(s[10])
+                dateList.add(s["date"])
         
         # convert the set to a list and sort it. 
         dateList = list(dateList)
@@ -806,7 +856,7 @@ class DataBase():
         # gather the IDs of checklists that match the filter
         for s in minimalSightingList:
             if self.TestSighting(s,  filter) is True:
-                checklistIDs .add(s[0])
+                checklistIDs .add(s["checklistID"])
         
         # get all the sightings that match these checklistIDs
         for c in checklistIDs:
@@ -818,13 +868,21 @@ class DataBase():
             for sighting in self.checklistDict[c]:
                 
                 # append species common name to list, so we can count the species
-                checklistSpecies.append(sighting[1])
+                checklistSpecies.append(sighting["commonName"])
                 
             # count the species, discarding superflous subspecies, spuhs and slashes when necessary
             speciesCount = self.CountSpecies(checklistSpecies)
             
-            # compile data for checklist (id, country, county, location, date, time, speciesCount)
-            checklistData= [sighting[0],  sighting[5],  sighting[6], sighting[7], sighting[10], sighting[11],  speciesCount]
+            # compile data for checklist (id, state (which incudes country prefix), county, location, date, time, speciesCount)
+            checklistData= [
+                sighting["checklistID"],  
+                sighting["state"],
+                sighting["county"], 
+                sighting["location"], 
+                sighting["date"], 
+                sighting["time"],  
+                speciesCount
+                ]
             
             returnList.append(checklistData)    
             
@@ -841,29 +899,29 @@ class DataBase():
         for s in self.sightingList:
             for c in checkedBoxes:
                 if c == "chkCommonName":
-                    if searchString.lower() in s[1].lower():
-                        foundSet.add(("Common Name",  s[0], s[7],  s[10], s[1]))
+                    if searchString.lower() in s["commonName"].lower():
+                        foundSet.add(("Common Name",  s["checklistID"], s["location"],  s["date"], s["commonName"]))
                 if c == "chkScientificName":
-                    if searchString.lower() in s[2].lower():
-                        foundSet.add(("Scientific Name",  s[0], s[7],  s[10], s[2]))                    
+                    if searchString.lower() in s["scientificName"].lower():
+                        foundSet.add(("Scientific Name",  s["checklistID"], s["location"],  s["date"], s["scientificName"]))                    
                 if c == "chkCountryName":
-                    if searchString.lower() in self.GetCountryName(s[5][0:2]).lower():
-                        foundSet.add(("Country",  s[0], s[7],  s[10],  self.GetCountryName(s[5][0:2])))
+                    if searchString.lower() in self.GetCountryName(s["country"]).lower():
+                        foundSet.add(("Country",  s["checklistID"], s["location"],  s["date"],  self.GetCountryName(s[5][0:2])))
                 if c == "chkStateName":
-                    if searchString.lower() in self.GetStateName(s[5]).lower():
-                        foundSet.add(("State",  s[0], s[7],  s[10],  self.GetStateName(s[5])))
+                    if searchString.lower() in self.GetStateName(s["state"]).lower():
+                        foundSet.add(("State",  s["checklistID"], s["location"],  s["date"],  self.GetStateName(s["state"])))
                 if c == "chkCountyName":
-                    if searchString.lower() in s[6].lower():
-                        foundSet.add(("County",  s[0], s[7],  s[10],  s[6]))
+                    if searchString.lower() in s["county"].lower():
+                        foundSet.add(("County",  s["checklistID"], s["location"],  s["date"],  s["county"]))
                 if c == "chkLocationName":
-                    if searchString.lower() in s[7].lower():
-                        foundSet.add(("Location",  s[0], s[7],  s[10],  s[7]))
+                    if searchString.lower() in s["location"].lower():
+                        foundSet.add(("Location",  s["checklistID"], s["location"],  s["date"],  s["location"]))
                 if c == "chkSpeciesComments":
-                    if searchString.lower() in s[19].lower():
-                        foundSet.add(("Species Comments",  s[0], s[7],  s[10],  s[19]))
+                    if searchString.lower() in s["speciesComments"].lower():
+                        foundSet.add(("Species Comments",  s["checklistID"], s["location"],  s["date"],  s["speciesComments"]))
                 if c == "chkChecklistComments":                    
-                    if searchString.lower() in s[20].lower():
-                        foundSet.add(("Checklist Comments",  s[0], s[7],  s[10],  s[20]))
+                    if searchString.lower() in s["checklistComments"].lower():
+                        foundSet.add(("Checklist Comments",  s["checklistID"], s["location"],  s["date"],  s["checklistComments"]))
                 
             foundList = list(foundSet)
             foundList.sort()
@@ -885,8 +943,8 @@ class DataBase():
     def GetLocationCoordinates(self,  location):
         coordinates = []
         s = self.locationDict[location][0]
-        coordinates.append(s[8])
-        coordinates.append(s[9])
+        coordinates.append(s["latitude"])
+        coordinates.append(s["longitude"])
 
         return(coordinates)
 
@@ -919,7 +977,7 @@ class DataBase():
             # this prevents us from needlessly checking all sightings in the whole database
             if speciesName != "":
                 if sightingFound is True:
-                    if s[1] != speciesName and speciesName != s[23]:
+                    if s["commonName"] != speciesName and speciesName != s["subspeciesName"]:
                         break
                     
             if self.TestSighting(s,  filter) is True:
@@ -927,25 +985,25 @@ class DataBase():
                 sightingFound = True
                                     
                 if queryType == "OnlyLocations":
-                    thisLocationList = s[7]
+                    thisLocationList = s["location"]
                 
                 if queryType == "Checklist":
-                    thisLocationList = [s[7],  s[4],  s[0],  s[8]]
+                    thisLocationList = [s["location"],  s["count"],  s["checklistID"],  s["latitude"]]
 
                 if queryType == "LocationHierarchy":
-                    thisLocationList = [s[5],  s[6],  s[7]]
+                    thisLocationList = [s["state"],  s["county"],  s["location"]]
 
                 # if we're getting first and last dates, too, we need to 
                 # store all dates in a dictionary keyed by location
                 # so later we can sort them and return the first and last dates, too
                 if queryType == "Dates":
                     
-                    keyName = s[7]
+                    keyName = s["location"]
                     
                     if keyName not in tempDateDict.keys():
-                        tempDateDict[keyName] = [s[10] + " " + s[11]]
+                        tempDateDict[keyName] = [s["date"] + " " + s["time"]]
                     else:
-                        tempDateDict[keyName].append(s[10] + " " + s[11])
+                        tempDateDict[keyName].append(s["date"] + " " + s["time"])
                 
                 if queryType != "Dates":
                     # add entry to returnList if it's not a duplicate
@@ -978,7 +1036,7 @@ class DataBase():
         # loop through sightingListForSpeciesSubset to gather relevant country names
         for s in sightingListForSpeciesSubset:
             if self.TestSighting(s,  tempFilter) is True:
-                countries.add(s[5][0:2])
+                countries.add(s["country"])
         countries = list(countries)
         countries.sort()
         
@@ -1000,19 +1058,19 @@ class DataBase():
             tempSpeciesDict = {}
             for tcs in thisCountrySightings:
 
-                keyName = tcs[1]
+                commonName = tcs["commonName"]
                 
-                if tcs[1] not in tempSpeciesDict.keys():
-                    tempSpeciesDict[keyName] = [tcs]
+                if commonName not in tempSpeciesDict.keys():
+                    tempSpeciesDict[commonName] = [tcs]
                 else:
-                    tempSpeciesDict[keyName].append(tcs)
+                    tempSpeciesDict[commonName].append(tcs)
 
             # loop through species with dates to see if any sightings are the 
             # first for the country
             for species in speciesWithFirstLastDates:
                 tempSpeciesSightings = tempSpeciesDict[species[0]]
-                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x[10]))
-                if species[1] <= tempSpeciesSightings[0][10]:
+                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x["date"]))
+                if species[1] <= tempSpeciesSightings[0]["date"]:
                     countrySpecies.append([country,  species[0]])
         
         return(countrySpecies)
@@ -1027,9 +1085,10 @@ class DataBase():
 
         # loop through speciesWithFirstLastDates to gather county names for sightings subset
         for s in sightingListForSpeciesSubset:
+            county = s["county"]
             if self.TestSighting(s,  tempFilter) is True:
-                if s[6] != "":
-                    counties.add(s[6])
+                if county != "":
+                    counties.add(county)
         counties = list(counties)
         counties.sort()
         
@@ -1047,17 +1106,18 @@ class DataBase():
             # keyed by species name            
             tempSpeciesDict = {}
             for tms in thisCountySightings:
-                if tms[1] not in tempSpeciesDict.keys():
-                    tempSpeciesDict[tms[1]] = [tms]
+                commonName = tms["commonName"]
+                if commonName not in tempSpeciesDict.keys():
+                    tempSpeciesDict[commonName] = [tms]
                 else:
-                    tempSpeciesDict[tms[1]].append(tms)
+                    tempSpeciesDict[commonName].append(tms)
 
             # loop through species with dates to see if any sightings are the 
             # first for the county
             for species in speciesWithFirstLastDates:
                 tempSpeciesSightings = tempSpeciesDict[species[0]]
-                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x[10]))
-                if species[1] <= tempSpeciesSightings[0][10]:
+                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x["date"]))
+                if species[1] <= tempSpeciesSightings[0]["date"]:
                     countySpecies.append([county,  species[0]])                    
         
         return(countySpecies)
@@ -1074,8 +1134,8 @@ class DataBase():
 
         for species in speciesWithFirstLastDates:
             tempSpeciesSightings = self.speciesDict[species[0]]
-            tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x[10]))
-            if species[1] <= tempSpeciesSightings[0][10]:
+            tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x["date"]))
+            if species[1] <= tempSpeciesSightings[0]["date"]:
                 lifeSpecies.append(species[0])        
                         
         return(lifeSpecies)
@@ -1090,7 +1150,7 @@ class DataBase():
         
         for s in sightingListForSpeciesSubset:
             if self.TestSighting(s,  filter) is True:
-                locations.add(s[7])
+                locations.add(s["location"])
         locations = list(locations)
         locations.sort()
         
@@ -1106,15 +1166,16 @@ class DataBase():
                         
             tempSpeciesDict = {}
             for tms in thisLocationSightings:
-                if tms[1] not in tempSpeciesDict.keys():
-                    tempSpeciesDict[tms[1]] = [tms]
+                commonName= tms["commonName"]
+                if commonName not in tempSpeciesDict.keys():
+                    tempSpeciesDict[commonName] = [tms]
                 else:
-                    tempSpeciesDict[tms[1]].append(tms)
+                    tempSpeciesDict[commonName].append(tms)
 
             for species in speciesWithFirstLastDates:
                 tempSpeciesSightings = tempSpeciesDict[species[0]]
-                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x[10]))
-                if species[1] <= tempSpeciesSightings[0][10]:
+                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x["date"]))
+                if species[1] <= tempSpeciesSightings[0]["date"]:
                     locationSpecies.append([location,  species[0]])         
                         
         return(locationSpecies)            
@@ -1128,7 +1189,7 @@ class DataBase():
         
         for s in sightingListForSpeciesSubset:
             if self.TestSighting(s,  filter) is True:
-                months.add(s[10][5:7])
+                months.add(s["date"][5:7])
         months = list(months)
         months.sort()
         
@@ -1150,15 +1211,16 @@ class DataBase():
             
             tempSpeciesDict = {}
             for tms in thisMonthSightings:
-                if tms[1] not in tempSpeciesDict.keys():
-                    tempSpeciesDict[tms[1]] = [tms]
+                commonName = tms["commonName"]
+                if commonName not in tempSpeciesDict.keys():
+                    tempSpeciesDict[commonName] = [tms]
                 else:
-                    tempSpeciesDict[tms[1]].append(tms)
+                    tempSpeciesDict[commonName].append(tms)
 
             for species in speciesWithFirstLastDates:
                 tempSpeciesSightings = tempSpeciesDict[species[0]]
-                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x[10]))
-                if species[1] <= tempSpeciesSightings[0][10]:
+                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x["date"]))
+                if species[1] <= tempSpeciesSightings[0]["date"]:
                     monthRange = ["Jan",  "Feb",  "Mar",  "Apr", "May",   "Jun",  "Jul",  "Aug",  "Sep",  "Oct",  "Nov",  "Dec"]
                     monthName = monthRange[int(month)-1]
                     monthSpecies.append([monthName,  species[0]])                       
@@ -1175,7 +1237,7 @@ class DataBase():
         
         for s in sightingListForSpeciesSubset:
             if self.TestSighting(s,  tempFilter) is True:
-                states.add(s[5])
+                states.add(s["state"])
         states = list(states)
         states.sort()
         
@@ -1190,15 +1252,16 @@ class DataBase():
             
             tempSpeciesDict = {}
             for tms in thisStateSightings:
-                if tms[1] not in tempSpeciesDict.keys():
-                    tempSpeciesDict[tms[1]] = [tms]
+                commonName = tms["commonName"]
+                if commonName not in tempSpeciesDict.keys():
+                    tempSpeciesDict[commonName] = [tms]
                 else:
-                    tempSpeciesDict[tms[1]].append(tms)
+                    tempSpeciesDict[commonName].append(tms)
 
             for species in speciesWithDates:
                 tempSpeciesSightings = tempSpeciesDict[species[0]]
-                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x[10]))
-                if species[1] <= tempSpeciesSightings[0][10]:
+                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x["date"]))
+                if species[1] <= tempSpeciesSightings[0]["date"]:
                     stateSpecies.append([state,  species[0]])            
                         
         return(stateSpecies)
@@ -1213,7 +1276,7 @@ class DataBase():
         
         for s in sightingListForSpeciesSubset:
             if self.TestSighting(s,  filter) is True:
-                years.add(s[10][0:4])
+                years.add(s["date"][0:4])
         years = list(years)
         years.sort()
         
@@ -1229,15 +1292,16 @@ class DataBase():
 
             tempSpeciesDict = {}
             for tms in thisYearSightings:
-                if tms[1] not in tempSpeciesDict.keys():
-                    tempSpeciesDict[tms[1]] = [tms]
+                commonName = tms["commonName"]
+                if commonName not in tempSpeciesDict.keys():
+                    tempSpeciesDict[commonName] = [tms]
                 else:
-                    tempSpeciesDict[tms[1]].append(tms)
+                    tempSpeciesDict[commonName].append(tms)
 
             for species in speciesWithDates:
                 tempSpeciesSightings = tempSpeciesDict[species[0]]
-                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x[10]))
-                if species[1] <= tempSpeciesSightings[0][10]:
+                tempSpeciesSightings = sorted(tempSpeciesSightings, key=lambda x: (x["date"]))
+                if species[1] <= tempSpeciesSightings[0]["date"]:
                     yearSpecies.append([year,  species[0]])   
                         
         return(yearSpecies)
@@ -1247,7 +1311,7 @@ class DataBase():
         
         filteredSightingList = self.speciesDict[species]
         
-        familyName = filteredSightingList[0][22]
+        familyName = filteredSightingList[0]["family"]
         
         return(familyName)
 
@@ -1256,7 +1320,7 @@ class DataBase():
         
         filteredSightingList = self.speciesDict[species]
         
-        orderName = filteredSightingList[0][21]
+        orderName = filteredSightingList[0]["order"]
         
         return(orderName)        
 
@@ -1265,7 +1329,7 @@ class DataBase():
 
         filteredSightingList = self.speciesDict[species]
         
-        scientificName = filteredSightingList[0][2]
+        scientificName = filteredSightingList[0]["scientificName"]
         
         return(scientificName)
 

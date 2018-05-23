@@ -232,7 +232,7 @@ class Families(QMdiSubWindow, form_Families.Ui_frmFamilies):
         self.tblPieChartLegend.setRowCount(len(self.familiesList))        
         self.tblPieChartLegend.horizontalHeader().setVisible(False)
         header = self.tblPieChartLegend.horizontalHeader()
-        header.setSectionResizeMode(2, QHeaderView.Stretch)     
+        header.setSectionResizeMode(1, QHeaderView.Stretch)     
         self.tblPieChartLegend.setShowGrid(False)
         total = 0
         colours = []

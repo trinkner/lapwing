@@ -160,9 +160,9 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
                 dSpecies = set()
                 checklistCount = set()
                 for sighting in self.mdiParent.db.locationDict[location]:
-                    if d == sighting[10]:
-                        dSpecies.add(sighting[1])
-                        checklistCount.add(sighting[0])
+                    if d == sighting["date"]:
+                        dSpecies.add(sighting["commonName"])
+                        checklistCount.add(sighting["checklistID"])
                 dateArray.append([len(dSpecies),  d, len(checklistCount)])
         dateArray.sort(reverse=True)
         

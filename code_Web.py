@@ -122,8 +122,8 @@ class Web(QMdiSubWindow, form_Web.Ui_frmWeb):
         settings.setFontSize(QWebEngineSettings.DefaultFontSize, floor(fontSize * 1.6))        
         
         scaleFactor = self.mdiParent.scaleFactor
-        windowWidth =  900 * scaleFactor
-        windowHeight = 600 * scaleFactor            
+        windowWidth =  800 * scaleFactor
+        windowHeight = 580 * scaleFactor            
         self.resize(windowWidth, windowHeight)
 
 
@@ -287,11 +287,12 @@ class Web(QMdiSubWindow, form_Web.Ui_frmWeb):
         windowTitle = "Map: " + windowTitle + " (" + str(len(coordinatesDict.keys())) + ")"
         
         self.setWindowTitle(windowTitle) 
+        self.title = windowTitle
        
         icon = QIcon()
         icon.addPixmap(QPixmap(":/icon_map.png"), QIcon.Normal, QIcon.Off)
         self.setWindowIcon(icon) 
-        
+                
         return(True)
 
 

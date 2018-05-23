@@ -343,28 +343,29 @@ class DateTotals(QMdiSubWindow, form_DateTotals.Ui_frmDateTotals):
         for sighting in minimalSightingList:
             
             # Consider only full species, not slash or spuh entries
-            if ("/" not in sighting[1]) and ("sp." not in sighting[1]):
+            commonName = sighting["commonName"]
+            if ("/" not in commonName) and ("sp." not in commonName):
             
                 if self.mdiParent.db.TestSighting(sighting,  filter) is True:
-                    dbYears.add(sighting[10][0:4])
-                    dbMonths.add(sighting[10][5:7])
-                    dbDates.add(sighting[10])
+                    dbYears.add(sighting["date"][0:4])
+                    dbMonths.add(sighting["date"][5:7])
+                    dbDates.add(sighting["date"])
                     dbFilteredSightings.append(sighting)
                     
-                    if sighting[10][0:4] not in yearDict.keys():
-                        yearDict[sighting[10][0:4]] = [sighting]
+                    if sighting["date"][0:4] not in yearDict.keys():
+                        yearDict[sighting["date"][0:4]] = [sighting]
                     else:
-                        yearDict[sighting[10][0:4]].append(sighting)
+                        yearDict[sighting["date"][0:4]].append(sighting)
                     
-                    if sighting[10][5:7] not in monthDict.keys():
-                        monthDict[sighting[10][5:7]] = [sighting]
+                    if sighting["date"][5:7] not in monthDict.keys():
+                        monthDict[sighting["date"][5:7]] = [sighting]
                     else:
-                        monthDict[sighting[10][5:7]].append(sighting)
+                        monthDict[sighting["date"][5:7]].append(sighting)
                     
-                    if sighting[10] not in dateDict.keys():
-                        dateDict[sighting[10]] = [sighting]
+                    if sighting["date"] not in dateDict.keys():
+                        dateDict[sighting["date"]] = [sighting]
                     else:
-                        dateDict[sighting[10]].append(sighting)
+                        dateDict[sighting["date"]].append(sighting)
 
         # check that we have at least one sighting to work with
         # otherwise, abort so MainWindow can post message to user
@@ -379,17 +380,14 @@ class DateTotals(QMdiSubWindow, form_DateTotals.Ui_frmDateTotals):
         self.tblDateTotals.setRowCount(len(dbDates)+1)
         self.tblDateTotals.setColumnCount(4)
 
-#        # sort dbFilteredSightings on date
-#        dbFilteredSightings.sort(key=lambda x: x[10])
-
         yearArray = []
 
         for year in dbYears:
             yearSpecies = set()
             yearChecklists = set()
             for s in yearDict[year]:
-                yearSpecies.add(s[1])
-                yearChecklists.add(s[0])
+                yearSpecies.add(s["commonName"])
+                yearChecklists.add(s["checklistID"])
             yearArray.append([len(yearSpecies),  year, len(yearChecklists)])
         yearArray.sort(reverse=True)
         R = 0
@@ -414,10 +412,10 @@ class DateTotals(QMdiSubWindow, form_DateTotals.Ui_frmDateTotals):
         for month in dbMonths:
             monthSpecies = set()
             monthChecklists = set()
-            monthChecklists.add(s[0])
+            monthChecklists.add(s["checklistID"])
             for s in monthDict[month]:
-                monthSpecies.add(s[1])
-                monthChecklists.add(s[0])
+                monthSpecies.add(s["commonName"])
+                monthChecklists.add(s["checklistID"])
             monthArray.append([len(monthSpecies),  month, len(monthChecklists)])
         monthArray.sort(reverse=True)
         R = 0
@@ -469,8 +467,8 @@ class DateTotals(QMdiSubWindow, form_DateTotals.Ui_frmDateTotals):
             dateSpecies = set()
             dateChecklists = set()
             for s in dateDict[date]:
-                dateSpecies.add(s[1])
-                dateChecklists.add(s[0])
+                dateSpecies.add(s["commonName"])
+                dateChecklists.add(s["checklistID"])
             dateArray.append([len(dateSpecies),  date, len(dateChecklists)])
                         
         dateArray.sort(reverse=True)

@@ -770,8 +770,8 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
     def scaleMe(self):
                
         scaleFactor = self.mdiParent.scaleFactor
-        windowWidth =  780  * scaleFactor
-        windowHeight = 500 * scaleFactor            
+        windowWidth =  800  * scaleFactor
+        windowHeight = 580 * scaleFactor            
         self.resize(windowWidth, windowHeight)
         
         fontSize = self.mdiParent.fontSize

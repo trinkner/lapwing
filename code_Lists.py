@@ -581,18 +581,18 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                 taxItem.setData(Qt.DisplayRole, R+1)
                 
                 speciesItem = QTableWidgetItem()
-                speciesItem.setText(s[23])
-                speciesItem.setData(Qt.UserRole,  QVariant(s[1]))
+                speciesItem.setText(s["commonName"])
+                speciesItem.setData(Qt.UserRole,  QVariant(s["commonName"]))
                 
                 countItem = QTableWidgetItem()
-                count = s[4]
+                count = s["count"]
                 if count != "X":
                     count = int(count)
                 countItem.setData(Qt.DisplayRole, count)
                 countItem.setTextAlignment(Qt.AlignCenter|Qt.AlignVCenter)
 
                 commentItem = QTableWidgetItem()
-                commentItem.setText(s[19])                
+                commentItem.setText(s["speciesComments"])                
                 
                 self.tblList.setItem(R, 0, taxItem)    
                 self.tblList.setItem(R, 1, speciesItem)
@@ -601,7 +601,7 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                 self.tblList.setItem(R, 2, countItem)
                 self.tblList.setItem(R,  3,  commentItem)
         
-                self.currentSpeciesList.append(s[1])
+                self.currentSpeciesList.append(s["commonName"])
                 
                 R = R + 1     
             
@@ -612,17 +612,17 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
             self.txtChecklistComments.setVisible(True)
             
             # fill checklist comments text
-            checklistComments = thisWindowList[0][20]
+            checklistComments = thisWindowList[0]["checklistComments"]
             if checklistComments == "":
                 checklistComments = "No checklist comments."
             self.txtChecklistComments.appendPlainText(checklistComments)
             
             #fill checklist details of time, distance, and checklist protoccol
-            time = thisWindowList[0][11]        
-            protocol = thisWindowList[0][12]
-            duration = thisWindowList[0][13]
-            distance = thisWindowList[0][15]
-            observerCount = thisWindowList[0][17]
+            time = thisWindowList[0]["time"]        
+            protocol = thisWindowList[0]["protocol"]
+            duration = thisWindowList[0]["duration"]
+            distance = thisWindowList[0]["distance"]
+            observerCount = thisWindowList[0]["observers"]
             
             if time != "":
                 time = time + ",  "
