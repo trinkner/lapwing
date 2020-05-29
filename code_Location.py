@@ -6,6 +6,7 @@ import code_Filter
 import code_Lists
 import code_MapHtml
 import code_Individual
+import code_Stylesheet
 from collections import defaultdict
 
 # import the Qt components we'll use
@@ -42,6 +43,7 @@ from PyQt5.QtWebEngineWidgets import (
 from base64 import (
     b64encode
     )
+import code_Stylesheet
 
 
 class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
@@ -51,6 +53,7 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.mdiParent = ""        
         self.resized.connect(self.resizeMe)                      
         self.tblDates.currentItemChanged.connect(self.FillSpeciesForDate)
@@ -231,12 +234,11 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
         tempFilter = code_Filter.Filter()
         tempFilter.setLocationType("Location")
         tempFilter.setLocationName(location)
-        speciesList = []
        
         # get species data from db 
         thisWindowList = self.mdiParent.db.GetSpeciesWithData(tempFilter)
        
-       # set up tblSpecies column headers and widths
+        # set up tblSpecies column headers and widths
         self.tblSpecies.setColumnCount(6)
         self.tblSpecies.setRowCount(len(thisWindowList)+1)
         self.tblSpecies.horizontalHeader().setVisible(True)
@@ -244,9 +246,14 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
         header = self.tblSpecies.horizontalHeader()
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         self.tblSpecies.setShowGrid(False)
+        
+        font = QFont()
+        font.setBold(True)
+        count = 0
+        nonSpeciesTaxaCount = 0
 
         # add species and dates to table row by row        
-        R = 1
+        R = 0
         for species in thisWindowList:    
             taxItem = QTableWidgetItem()
             taxItem.setData(Qt.DisplayRole, R)
@@ -268,13 +275,23 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
             self.tblSpecies.setItem(R, 4, checklistsItem)
             self.tblSpecies.setItem(R, 5, percentageItem)
             
-            speciesList.append(species[0])
-            R = R + 1
+            self.tblSpecies.item(R, 1).setFont(font)
             
-        self.tblSpecies.removeRow(0)
-        
-        count = self.mdiParent.db.CountSpecies(speciesList)
-        self.lblSpecies.setText("Species (" + str(count) + "):")
+            # set the species to gray if it's not a true species
+            if " x " in species[0] or "sp." in species[0] or "/" in species[0]:
+                self.tblSpecies.item(R, 1).setForeground(Qt.gray)
+                nonSpeciesTaxaCount += 1
+            else:
+                self.tblSpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)
+                count += 1             
+                        
+            R += 1
+
+        labelText = "Species: " + str(count)
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"
+                            
+        self.lblSpecies.setText(labelText)
         
 
     def SetDate(self,  date):
@@ -302,13 +319,35 @@ class Location(QMdiSubWindow, form_Location.Ui_frmLocation):
 
             species = self.mdiParent.db.GetSpecies(tempFilter)
 
-            self.lstSpecies.addItems(species)
+            font = QFont()
+            font.setBold(True)
+            
+            count = 0
+            nonSpeciesTaxaCount = 0 
+            
+            R = 0
+            for s in species:
+                
+                self.lstSpecies.addItem(s)
+                self.lstSpecies.item(R).setFont(font)
+                # set the species to gray if it's not a true species
+                if " x " in s or "sp." in s or "/" in s:
+                    self.lstSpecies.item(R).setForeground(Qt.gray)
+                    nonSpeciesTaxaCount += 1
+                else:
+                    self.lstSpecies.item(R).setForeground(code_Stylesheet.speciesColor)
+                    count += 1             
+                
+                R += 1
+            
+            labelText = "Species: " + str(count)
+            if nonSpeciesTaxaCount > 0:
+                labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"                
+                
             self.lstSpecies.setCurrentRow(0)
             self.lstSpecies.setSpacing(2)
-            
-            count = self.mdiParent.db.CountSpecies(species)
-            
-            self.lblSpeciesSeen.setText("Species for selected date (" + str(count) + ")")
+                        
+            self.lblSpeciesSeen.setText(labelText)
 
 
     def html(self):

@@ -25,6 +25,7 @@ class Find(QMdiSubWindow, form_Find.Ui_frmFind):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.mdiParent = ""
         self.resized.connect(self.resizeMe)    
         self.btnFind.clicked.connect(self.CreateFindResults)

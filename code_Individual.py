@@ -4,6 +4,8 @@ import code_Filter
 import code_Lists 
 import code_Location 
 import code_Web
+import code_Photos
+import code_Stylesheet
 
 # import the Qt components we'll use
 # do this so later we won't have to clutter our code with references to parent Qt classes 
@@ -25,12 +27,11 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, 
     QHeaderView,
     QMdiSubWindow,
-    QTreeWidgetItem
+    QTreeWidgetItem,
+    QPushButton
     )
 
-from math import (
-    floor
-)
+from math import floor
 
 
 class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
@@ -43,6 +44,7 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.mdiParent = ""        
         self.resized.connect(self.resizeMe)                    
         self.trLocations.currentItemChanged.connect(self.FillDates)
@@ -52,7 +54,6 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
         self.lstDates.itemDoubleClicked.connect(lambda: self.CreateSpeciesList(self.lstDates))   
         self.tblYearLocations.itemDoubleClicked.connect(lambda: self.CreateSpeciesList(self.tblYearLocations))
         self.tblMonthLocations.itemDoubleClicked.connect(lambda: self.CreateSpeciesList(self.tblMonthLocations))
-        self.buttonMacaulay.clicked.connect(self.CreateWebPageForPhotos)
         self.buttonWikipedia.clicked.connect(self.CreateWebPageForWikipedia)
         self.buttonAllAboutBirds.clicked.connect(self.CreateWebPageForAllAboutBirds)
         self.buttonAudubon.clicked.connect(self.CreateWebPageForAudubon)
@@ -62,15 +63,30 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
 
  
     def FillIndividual(self, Species): 
+        
         self.setWindowTitle(Species)
         self.lblCommonName.setText(Species)
-        self.lblCommonName.setStyleSheet('QLabel {color: blue;}')
+        
+        red = code_Stylesheet.speciesColor.red()
+        green = code_Stylesheet.speciesColor.green()
+        blue = code_Stylesheet.speciesColor.blue()
+        self.lblCommonName.setStyleSheet('QLabel {font-weight: bold; color: rgb(' + str(red) + ',' + str(green) + ',' + str(blue) + ');}')
         self.lblScientificName.setText(self.mdiParent.db.GetScientificName(Species))
         orderAndFamilyText = self.mdiParent.db.GetOrderName(Species)
+        
         # check if taxonomy data has been loaded. If so, add a semi-colon and the family name
         if orderAndFamilyText != "":
             orderAndFamilyText = orderAndFamilyText + "; " + self.mdiParent.db.GetFamilyName(Species)
         self.lblOrderName.setText(orderAndFamilyText)
+        
+        # if available, add BBL banding code
+        bblCode = self.mdiParent.db.GetBBLCode(Species)
+        if bblCode != "":
+            self.lblSpeciesCode.setText("IBP Banding Code: " + bblCode)
+        else:
+            # add species Quick Entry Code code used by eBird
+            self.lblSpeciesCode.setText("eBird Entry Code: " + self.mdiParent.db.GetQuickEntryCode(Species).upper())
+                
         # find list of dates for species, to find oldest and newest
         filter = code_Filter.Filter()
         filter.setSpeciesName(Species)
@@ -181,9 +197,7 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
                         
                     locationCount = locationCount + len(theseLocations)
         
-        # Fill Year Tree widget
-        theseYears = []
-        
+        # Fill Year Tree widget        
         theseYears = set()
         for d in dateList:
             theseYears.add(d[0:4])
@@ -282,7 +296,19 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
         if locationCount == 1:
             self.lblLocations.setText("Location (1)")
         else:
-            self.lblLocations.setText("Locations (" + str(locationCount) + ")")   
+            self.lblLocations.setText("Locations (" + str(locationCount) + ")")  
+            
+        # add a photo button if the db holds photos of this species
+        filter = code_Filter.Filter()
+        filter.setSpeciesName(Species) 
+        
+        photoSightings = self.mdiParent.db.GetSightingsWithPhotos(filter)
+        
+        if len(photoSightings) > 0:
+            btnPhotos = QPushButton()
+            btnPhotos.setText("Photos")
+            btnPhotos.clicked.connect(self.createPhotos)
+            self.verticalLayout_10.addWidget(btnPhotos)
 
         self.scaleMe()
         self.resizeMe()            
@@ -567,30 +593,24 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
         sub.LoadWebPage(url)        
         self.parent().parent().addSubWindow(sub)
         self.mdiParent.PositionChildWindow(sub, self)        
-        sub.show()   
+        sub.show()       
 
 
-    def CreateWebPageForPhotos(self):
+    def createPhotos(self):
         
-        speciesScientificName = self.lblScientificName.text()
         speciesCommonName = self.lblCommonName.text()
-        
-        sub = code_Web.Web()
+
+        sub = code_Photos.Photos()
         sub.mdiParent = self.mdiParent
-        sub.title = "Macaulay Library Photos: " + speciesCommonName        
-        url = ("https://search.macaulaylibrary.org/catalog?searchField=species&q="
-                  + speciesScientificName.split(" ")[0] 
-                  +"+" 
-                  + speciesScientificName.split(" ")[1]
-                  )
-                  
-        if speciesScientificName.count(" ") == 2:
-            url = url + "%20" + speciesScientificName.split(" ")[2]
-                        
-        sub.LoadWebPage(url)        
+        
+        filter = code_Filter.Filter()
+        filter.setSpeciesName(speciesCommonName)
+        sub.FillPhotos(filter)
+
         self.parent().parent().addSubWindow(sub)
         self.mdiParent.PositionChildWindow(sub, self)        
-        sub.show()      
+        
+        sub.show() 
 
 
     def CreateWebPageForWikipedia(self):
@@ -796,12 +816,11 @@ class Individual(QMdiSubWindow, form_Individual.Ui_frmIndividual):
         textHeight = metrics.boundingRect("2222-22-22").height()            
         textWidth= metrics.boundingRect("2222-22-22").width()  
 
-        self.buttonMacaulay.resize(self.buttonMacaulay.x(), textHeight)
-        self.buttonWikipedia.resize(self.buttonMacaulay.x(), textHeight)
-        self.buttonAudubon.resize(self.buttonMacaulay.x(), textHeight)
-        self.buttonAllAboutBirds.resize(self.buttonMacaulay.x(), textHeight)
-        self.buttonChecklists.resize(self.buttonMacaulay.x(), textHeight)
-        self.buttonMap.resize(self.buttonMacaulay.x(), textHeight)
+        self.buttonWikipedia.resize(self.buttonWikipedia.x(), textHeight)
+        self.buttonAudubon.resize(self.buttonWikipedia.x(), textHeight)
+        self.buttonAllAboutBirds.resize(self.buttonWikipedia.x(), textHeight)
+        self.buttonChecklists.resize(self.buttonWikipedia.x(), textHeight)
+        self.buttonMap.resize(self.buttonWikipedia.x(), textHeight)
 
         root = self.trLocations.invisibleRootItem()
         for i in range(root.childCount()):

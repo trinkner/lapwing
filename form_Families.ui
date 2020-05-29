@@ -138,7 +138,7 @@
      <item>
       <widget class="QTabWidget" name="tabFamilies">
        <property name="currentIndex">
-        <number>0</number>
+        <number>1</number>
        </property>
        <widget class="QWidget" name="tab">
         <property name="sizePolicy">
@@ -208,6 +208,9 @@
             </item>
             <item>
              <widget class="QListWidget" name="lstFamilies">
+              <property name="contextMenuPolicy">
+               <enum>Qt::ActionsContextMenu</enum>
+              </property>
               <property name="spacing">
                <number>2</number>
               </property>
@@ -261,6 +264,9 @@
             </item>
             <item>
              <widget class="QListWidget" name="lstSpecies">
+              <property name="contextMenuPolicy">
+               <enum>Qt::ActionsContextMenu</enum>
+              </property>
               <property name="spacing">
                <number>2</number>
               </property>
@@ -290,6 +296,12 @@
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
            </property>
+           <property name="sizeAdjustPolicy">
+            <enum>QAbstractScrollArea::AdjustToContents</enum>
+           </property>
+           <property name="viewportUpdateMode">
+            <enum>QGraphicsView::FullViewportUpdate</enum>
+           </property>
           </widget>
          </item>
          <item>
@@ -299,6 +311,9 @@
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
+           </property>
+           <property name="contextMenuPolicy">
+            <enum>Qt::ActionsContextMenu</enum>
            </property>
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
@@ -339,6 +354,21 @@
     </layout>
    </widget>
   </widget>
+  <action name="actionSetFamilyFilterToPieChartLegendFamily">
+   <property name="text">
+    <string>Set filter to family</string>
+   </property>
+  </action>
+  <action name="actionSetFilterToFamily">
+   <property name="text">
+    <string>Set filter to family</string>
+   </property>
+  </action>
+  <action name="actionSetFilterToSpecies">
+   <property name="text">
+    <string>Set filter to species</string>
+   </property>
+  </action>
  </widget>
  <resources>
   <include location="icons.qrc"/>

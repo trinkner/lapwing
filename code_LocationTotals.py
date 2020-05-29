@@ -1,5 +1,9 @@
 # import GUI form for this class
 import form_LocationTotals
+# import pandas
+# import folium
+# import json
+# from branca.colormap import LinearColormap
 
 # import classes from other project files
 import code_Filter
@@ -42,8 +46,10 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.mdiParent = ""        
         self.resized.connect(self.resizeMe)                            
+        self.tblRegionTotals.itemDoubleClicked.connect(lambda: self.CreateListForLocation("Region"))
         self.tblCountryTotals.itemDoubleClicked.connect(lambda: self.CreateListForLocation("Country"))
         self.tblStateTotals.itemDoubleClicked.connect(lambda: self.CreateListForLocation("State"))
         self.tblCountyTotals.itemDoubleClicked.connect(lambda: self.CreateListForLocation("County"))
@@ -64,7 +70,9 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
 
     def CreateListForLocation(self,  locationType):
         tempFilter = deepcopy(self.filter)
-        
+
+        if locationType == "Region":
+            locationName = self.mdiParent.db.GetRegionCode(self.tblRegionTotals.item(self.tblRegionTotals.currentRow(),  1).text())        
         if locationType == "Country":
             locationName = self.mdiParent.db.GetCountryCode(self.tblCountryTotals.item(self.tblCountryTotals.currentRow(),  1).text())
         if locationType == "State":
@@ -141,6 +149,50 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
             self.lblDetails.text() + 
             "</H2>"
             )        
+
+        html = html + (
+            "<H3>" + 
+            "Region Totals" + 
+            "</H3>"
+            )        
+            
+        html=html + (
+            "<font size='2'>" +
+            "<table width='100%'>" +
+            " <tr>"
+            )
+                    
+        html=html + (    
+            "<th>Rank</th>" +
+            "<th>Region</th> " +
+            "<th>Species</th>" +
+            "<th>Checklists</th>" +
+            "</tr>"
+            )
+            
+        for r in range(self.tblRegionTotals.rowCount()):
+            html = html + (
+            "<tr>" +
+            "<td>" +
+            self.tblRegionTotals.item(r, 0).text() +
+            "</td>" +
+            "<td>" +
+            self.tblRegionTotals.item(r, 1).text() +
+            "</td>" +
+            "<td>" +
+            self.tblRegionTotals.item(r, 2).text() +
+            "</td>" +
+            "<td>" +
+            self.tblRegionTotals.item(r, 3).text() +
+            "</td>" +
+            "</tr>"
+            )
+            
+        html = html + (
+            "</table>"
+            "</font size>"
+            )
+
 
         html = html + (
             "<H3>" + 
@@ -328,10 +380,12 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
         self.filter = deepcopy(filter)
         
         # find all years, months, and dates in db
+        dbRegions = set()
         dbCountries = set()
         dbStates = set()
         dbCounties = set()
         dbLocations = set()
+        regionDict = defaultdict()
         countryDict = defaultdict()
         stateDict = defaultdict()
         countyDict = defaultdict()
@@ -341,18 +395,26 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
         
         for s in minimalSightingList:
             
-            # Consider only full species, not slash or spuh entries
+            # Consider only full species, not slash or spuh or hybrid entries
             commonName = s["commonName"]
-            if ("/" not in commonName) and ("sp." not in commonName):
+            if "/" not in commonName and "sp." not in commonName and " x " not in commonName:
                 
                 if self.mdiParent.db.TestSighting(s,  filter) is True:
+                    for r in s["regionCodes"]:
+                        dbRegions.add(r)  
                     dbCountries.add(s["country"])
                     dbStates.add(s["state"])
                     if s["county"] != "":
                         dbCounties.add(s["county"])
                     dbLocations.add(s["location"])
                     
-                    # create dictionaries of country, state, county, and location sighting for faster lookup
+                    # create dictionaries of region, country, state, county, and location sighting for faster lookup
+                    for r in s["regionCodes"]:
+                        if r not in regionDict.keys():
+                            regionDict[r] = [s]
+                        else:
+                            regionDict[r].append(s)                
+
                     if s["country"] not in countryDict.keys():
                         countryDict[s["country"]] = [s]
                     else:
@@ -375,10 +437,12 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
                         locationDict[s["location"]].append(s)           
         
         # check if no sightings were found. Return false if none found. Abort and display message.
-        if len(countryDict) + len(stateDict) + len(countyDict) + len(locationDict) == 0:
+        if len(regionDict) + len(countryDict) + len(stateDict) + len(countyDict) + len(locationDict) == 0:
             return(False)
         
         # set numbers of rows for each tab's grid (years, months, dates)
+        self.tblRegionTotals.setRowCount(len(dbRegions))
+        self.tblRegionTotals.setColumnCount(4)
         self.tblCountryTotals.setRowCount(len(dbCountries))
         self.tblCountryTotals.setColumnCount(4)
         self.tblStateTotals.setRowCount(len(dbStates))
@@ -387,11 +451,41 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
         self.tblCountyTotals.setColumnCount(4)
         self.tblLocationTotals.setRowCount(len(dbLocations))
         self.tblLocationTotals.setColumnCount(4)     
-        
+
+        self.tblRegionTotals.setShowGrid(False)                
         self.tblCountryTotals.setShowGrid(False)        
         self.tblStateTotals.setShowGrid(False)        
         self.tblCountyTotals.setShowGrid(False)        
         self.tblLocationTotals.setShowGrid(False)        
+     
+        regionArray = []
+        for region in dbRegions:
+            regionSpecies = set()
+            regionChecklists = set()
+            for s in regionDict[region]:
+                regionSpecies.add(s["commonName"])
+                regionChecklists.add(s["checklistID"])
+            regionArray.append([len(regionSpecies), region, len(regionChecklists)])
+        regionArray.sort(reverse=True)
+        R = 0
+        for region in regionArray:            
+            rankItem = QTableWidgetItem()
+            rankItem.setData(Qt.DisplayRole, R+1)
+            regionItem = QTableWidgetItem()
+            regionItem.setText(self.mdiParent.db.GetRegionName(region[1]))
+            regionTotalItem = QTableWidgetItem()
+            regionTotalItem.setData(Qt.DisplayRole, region[0])
+            regionTotalItem.setTextAlignment(Qt.AlignCenter|Qt.AlignVCenter)                     
+            regionChecklistTotalItem = QTableWidgetItem()
+            regionChecklistTotalItem.setData(Qt.DisplayRole, region[2])
+            regionChecklistTotalItem.setTextAlignment(Qt.AlignCenter|Qt.AlignVCenter)                     
+            self.tblRegionTotals.setItem(R, 0, rankItem)    
+            self.tblRegionTotals.setItem(R, 1, regionItem)
+            self.tblRegionTotals.setItem(R, 2, regionTotalItem)
+            self.tblRegionTotals.setItem(R, 3, regionChecklistTotalItem)
+
+            R = R + 1     
+     
         
         countryArray = []
         for country in dbCountries:
@@ -447,7 +541,7 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
             self.tblStateTotals.setItem(R, 2, stateTotalItem)
             self.tblStateTotals.setItem(R, 3, stateChecklistTotalItem)
             R = R + 1
-
+            
         countyArray = []
         for county in dbCounties:
             if county != "" and county is not None:
@@ -510,7 +604,7 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
             R = R + 1
 
         # set headers and column stretching 
-        for t in [self.tblCountryTotals, self.tblStateTotals, self.tblCountyTotals, self.tblLocationTotals]:
+        for t in [self.tblRegionTotals, self.tblCountryTotals, self.tblStateTotals, self.tblCountyTotals, self.tblLocationTotals]:
             t.setSortingEnabled(True)
             t.sortItems(0,0)
             t.horizontalHeader().setVisible(True)
@@ -579,7 +673,7 @@ class LocationTotals(QMdiSubWindow, form_LocationTotals.Ui_frmLocationTotals):
         textHeight = metrics.boundingRect("A").height()        
         rankTextWidth = metrics.boundingRect("Rank").width()
         
-        for t in [self.tblCountryTotals, self.tblStateTotals, self.tblCountyTotals, self.tblLocationTotals]:
+        for t in [self.tblRegionTotals, self.tblCountryTotals, self.tblStateTotals, self.tblCountyTotals, self.tblLocationTotals]:
             header = t.horizontalHeader()
             header.resizeSection(0,  floor(1.7 * rankTextWidth))
             header.resizeSection(2,  floor(2 * rankTextWidth))

@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Individual.ui'
+# Form implementation generated from reading ui file 'form_Individual.ui'
 #
-# Created by: PyQt5 UI code generator 5.10
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_frmIndividual(object):
     def setupUi(self, frmIndividual):
@@ -113,6 +115,9 @@ class Ui_frmIndividual(object):
         self.lblOrderName.setWordWrap(True)
         self.lblOrderName.setObjectName("lblOrderName")
         self.verticalLayout_3.addWidget(self.lblOrderName)
+        self.lblSpeciesCode = QtWidgets.QLabel(self.frameNames)
+        self.lblSpeciesCode.setObjectName("lblSpeciesCode")
+        self.verticalLayout_3.addWidget(self.lblSpeciesCode)
         self.lblFirstSeen = QtWidgets.QLabel(self.frameNames)
         self.lblFirstSeen.setWordWrap(True)
         self.lblFirstSeen.setObjectName("lblFirstSeen")
@@ -143,14 +148,6 @@ class Ui_frmIndividual(object):
         self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.verticalLayout_10.setSpacing(5)
         self.verticalLayout_10.setObjectName("verticalLayout_10")
-        self.buttonMacaulay = QtWidgets.QPushButton(self.frameButtons)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.buttonMacaulay.sizePolicy().hasHeightForWidth())
-        self.buttonMacaulay.setSizePolicy(sizePolicy)
-        self.buttonMacaulay.setObjectName("buttonMacaulay")
-        self.verticalLayout_10.addWidget(self.buttonMacaulay)
         self.buttonWikipedia = QtWidgets.QPushButton(self.frameButtons)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -354,9 +351,9 @@ class Ui_frmIndividual(object):
         self.lblCommonName.setText(_translate("frmIndividual", "Common Name"))
         self.lblScientificName.setText(_translate("frmIndividual", "Scientific Name"))
         self.lblOrderName.setText(_translate("frmIndividual", "Order Name"))
+        self.lblSpeciesCode.setText(_translate("frmIndividual", "TextLabel"))
         self.lblFirstSeen.setText(_translate("frmIndividual", "First Seen:"))
         self.lblMostRecentlySeen.setText(_translate("frmIndividual", "Most Recently Seen:"))
-        self.buttonMacaulay.setText(_translate("frmIndividual", "Macaulay"))
         self.buttonWikipedia.setText(_translate("frmIndividual", "Wikipedia"))
         self.buttonAllAboutBirds.setText(_translate("frmIndividual", "All About Birds"))
         self.buttonAudubon.setText(_translate("frmIndividual", "Audubon"))
@@ -372,5 +369,4 @@ class Ui_frmIndividual(object):
         self.lblMonthDates.setText(_translate("frmIndividual", "Dates"))
         self.lblMonthLocationsForDate.setText(_translate("frmIndividual", "Locations for the selected date"))
         self.tabIndividual.setTabText(self.tabIndividual.indexOf(self.tab_3), _translate("frmIndividual", "By Month"))
-
 import icons_rc

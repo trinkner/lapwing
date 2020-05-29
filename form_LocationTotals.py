@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'LocationTotals.ui'
+# Form implementation generated from reading ui file 'form_LocationTotals.ui'
 #
-# Created by: PyQt5 UI code generator 5.10
+# Created by: PyQt5 UI code generator 5.13.0
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_frmLocationTotals(object):
     def setupUi(self, frmLocationTotals):
         frmLocationTotals.setObjectName("frmLocationTotals")
-        frmLocationTotals.resize(600, 580)
+        frmLocationTotals.resize(665, 580)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -20,14 +22,15 @@ class Ui_frmLocationTotals(object):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(":/icon_locationtotals.png"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         frmLocationTotals.setWindowIcon(icon)
+        self.verticalLayout_7 = QtWidgets.QVBoxLayout(frmLocationTotals)
+        self.verticalLayout_7.setObjectName("verticalLayout_7")
         self.scrollArea = QtWidgets.QScrollArea(frmLocationTotals)
-        self.scrollArea.setGeometry(QtCore.QRect(10, 10, 601, 571))
         self.scrollArea.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.scrollArea.setFrameShadow(QtWidgets.QFrame.Plain)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setObjectName("scrollArea")
         self.scrollAreaWidgetContents = QtWidgets.QWidget()
-        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 601, 571))
+        self.scrollAreaWidgetContents.setGeometry(QtCore.QRect(0, 0, 647, 562))
         self.scrollAreaWidgetContents.setObjectName("scrollAreaWidgetContents")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout.setContentsMargins(5, 5, 5, 5)
@@ -74,6 +77,29 @@ class Ui_frmLocationTotals(object):
         self.verticalLayout.addWidget(self.lblDetails)
         self.tabLocationTotals = QtWidgets.QTabWidget(self.scrollAreaWidgetContents)
         self.tabLocationTotals.setObjectName("tabLocationTotals")
+        self.tabRegionTotals = QtWidgets.QWidget()
+        self.tabRegionTotals.setObjectName("tabRegionTotals")
+        self.verticalLayout_6 = QtWidgets.QVBoxLayout(self.tabRegionTotals)
+        self.verticalLayout_6.setObjectName("verticalLayout_6")
+        self.tblRegionTotals = QtWidgets.QTableWidget(self.tabRegionTotals)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.tblRegionTotals.sizePolicy().hasHeightForWidth())
+        self.tblRegionTotals.setSizePolicy(sizePolicy)
+        self.tblRegionTotals.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
+        self.tblRegionTotals.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.tblRegionTotals.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.tblRegionTotals.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.tblRegionTotals.setObjectName("tblRegionTotals")
+        self.tblRegionTotals.setColumnCount(0)
+        self.tblRegionTotals.setRowCount(0)
+        self.tblRegionTotals.horizontalHeader().setVisible(False)
+        self.tblRegionTotals.horizontalHeader().setHighlightSections(False)
+        self.tblRegionTotals.verticalHeader().setVisible(False)
+        self.tblRegionTotals.verticalHeader().setHighlightSections(False)
+        self.verticalLayout_6.addWidget(self.tblRegionTotals)
+        self.tabLocationTotals.addTab(self.tabRegionTotals, "")
         self.tab = QtWidgets.QWidget()
         self.tab.setObjectName("tab")
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.tab)
@@ -171,6 +197,7 @@ class Ui_frmLocationTotals(object):
         self.tabLocationTotals.addTab(self.tab_2, "")
         self.verticalLayout.addWidget(self.tabLocationTotals)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.verticalLayout_7.addWidget(self.scrollArea)
         self.actionSetLocationFilter = QtWidgets.QAction(frmLocationTotals)
         self.actionSetLocationFilter.setObjectName("actionSetLocationFilter")
         self.actionSetCountryFilter = QtWidgets.QAction(frmLocationTotals)
@@ -190,6 +217,8 @@ class Ui_frmLocationTotals(object):
         self.lblLocation.setText(_translate("frmLocationTotals", "Location"))
         self.lblDateRange.setText(_translate("frmLocationTotals", "Date Range"))
         self.lblDetails.setText(_translate("frmLocationTotals", "Details Label"))
+        self.tblRegionTotals.setSortingEnabled(True)
+        self.tabLocationTotals.setTabText(self.tabLocationTotals.indexOf(self.tabRegionTotals), _translate("frmLocationTotals", "Region Totals"))
         self.tblCountryTotals.setSortingEnabled(True)
         self.tabLocationTotals.setTabText(self.tabLocationTotals.indexOf(self.tab), _translate("frmLocationTotals", "Country Totals"))
         self.tblStateTotals.setSortingEnabled(True)
@@ -202,5 +231,4 @@ class Ui_frmLocationTotals(object):
         self.actionSetCountryFilter.setText(_translate("frmLocationTotals", "Set Filter to Country"))
         self.actionSetStateFilter.setText(_translate("frmLocationTotals", "Set Filter to State"))
         self.actionSetCountyFilter.setText(_translate("frmLocationTotals", "Set Filter to County"))
-
 import icons_rc

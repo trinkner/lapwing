@@ -5,6 +5,7 @@ import code_Location
 import code_Individual
 import code_Lists
 import code_MapHtml
+import code_Stylesheet
 
 # import basic Python libraries
 from copy import deepcopy
@@ -48,6 +49,9 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
+        
         self.mdiParent = ""
         self.myHtml = ""
         self.resized.connect(self.resizeMe)                
@@ -130,6 +134,7 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         sub.show() 
         QApplication.restoreOverrideCursor()     
     
+    
     def CreateIndividual(self,  callingWidget):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         if callingWidget.objectName() in (["lstSpecies", 
@@ -158,6 +163,7 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         sub.resizeMe()
         QApplication.restoreOverrideCursor()     
     
+    
     def CreateSpeciesList(self,  callingWidget):
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         if callingWidget.objectName() == "lstDates":
@@ -175,9 +181,14 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         sub.show() 
         QApplication.restoreOverrideCursor()          
         
+        
     def FillAnalysisReport(self, filter):
         # save filter for later use
         self.filter = filter
+        
+        # set up a bold font to use in columns as needed
+        font = QFont()
+        font.setBold(True)         
         
         # create subset of master sightings list for this filter
         self.filteredSightingList = deepcopy(self.mdiParent.db.GetSightings(filter))
@@ -187,15 +198,15 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         # get species and first/last date data from db 
         speciesListWithDates = self.mdiParent.db.GetSpeciesWithData(filter,  self.filteredSightingList,  "Subspecies")
        
-       # abort if filter produced no sightings
+        # abort if filter produced no sightings
         if len(speciesListWithDates) == 0:
             return(False)
        
-       # set up tblSpecies column headers and widths
-        self.tblSpecies.setColumnCount(4)
+        # set up tblSpecies column headers and widths
+        self.tblSpecies.setColumnCount(5)
         self.tblSpecies.setRowCount(len(speciesListWithDates))
         self.tblSpecies.horizontalHeader().setVisible(True)
-        self.tblSpecies.setHorizontalHeaderLabels(['Tax', 'Species', 'First',  'Last'])
+        self.tblSpecies.setHorizontalHeaderLabels(['Tax', 'Species', 'Count', 'First',  'Last'])
         header = self.tblSpecies.horizontalHeader()
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         self.tblSpecies.setShowGrid(False)
@@ -207,16 +218,29 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
             taxItem.setData(Qt.DisplayRole, R+1)
             speciesItem = QTableWidgetItem()
             speciesItem.setText(species[0])
-            speciesItem.setData(Qt.UserRole,  QVariant(species[4]))                            
+            speciesItem.setData(Qt.UserRole,  QVariant(species[4])) 
+            countItem = QTableWidgetItem()
+            countItem.setData(Qt.DisplayRole, species[7])
             firstDateItem = QTableWidgetItem()
             firstDateItem.setData(Qt.DisplayRole, species[1])
             lastDateItem = QTableWidgetItem()
             lastDateItem.setData(Qt.DisplayRole, species[2])
             self.tblSpecies.setItem(R, 0, taxItem)    
             self.tblSpecies.setItem(R, 1, speciesItem)
-            self.tblSpecies.setItem(R, 2, firstDateItem)
-            self.tblSpecies.setItem(R, 3, lastDateItem)
+            self.tblSpecies.setItem(R, 2, countItem)
+            self.tblSpecies.setItem(R, 3, firstDateItem)
+            self.tblSpecies.setItem(R, 4, lastDateItem)
+            
+            # set the species column to bold font (set up above)
+            self.tblSpecies.item(R, 1).setFont(font)
 
+            # color code the entry. Stylesheet color for full species, gray if not
+            # set the species to gray if it's not a true species
+            if " x " in species[0] or "sp." in species[0] or "/" in species[0]:
+                self.tblSpecies.item(R, 1).setForeground(Qt.gray)
+            else:
+                self.tblSpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)            
+            
             self.speciesList.append(species[4])
             
             R = R + 1
@@ -228,6 +252,8 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         if len(listDates) > 0:
             self.lstDates.setCurrentRow(0)
             self.FillSpeciesForDate()
+            
+        self.lblDatesSeen.setText("Dates: " + str(len(listDates)))
 
         # ****Setup Locations page****
         listLocations = self.mdiParent.db.GetLocations(filter, "OnlyLocations",   filteredSightingList)
@@ -237,7 +263,9 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         if len(listLocations) > 0:
             self.lstLocations.setCurrentRow(0)
             self.FillSpeciesForLocation()
-            self.lblLocations.setText("Locations (" + str(len(listLocations)) + ")")
+                                
+            self.lblLocations.setText("Locations: " + str(len(listLocations)))
+            self.lblLocationsVisited.setText("Locations: " + str(len(listLocations)))
 
         # ****Setup New Species for Dates page****
         speciesListFilter = code_Filter.Filter()
@@ -256,8 +284,12 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         self.tblNewYearSpecies.setShowGrid(False)
 
+        count = 0
+        nonSpeciesTaxaCount = 0
+
         if len(yearSpecies) > 0:
-            R = 1
+
+            R = 0
             for ys in yearSpecies:
                 yearItem = QTableWidgetItem()
                 yearItem.setText(ys[0])
@@ -265,12 +297,27 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
                 newYearSpeciesItem.setText(ys[1])
                 self.tblNewYearSpecies.setItem(R, 0, yearItem)    
                 self.tblNewYearSpecies.setItem(R, 1, newYearSpeciesItem)
+                self.tblNewYearSpecies.item(R, 1).setFont(font)
+                
+                # color code the entry. Stylesheet color  for full species, gray if not
+                # set the species to gray if it's not a true species
+                if " x " in ys[1] or "sp." in ys[1] or "/" in ys[1]:
+                    self.tblNewYearSpecies.item(R, 1).setForeground(Qt.gray)
+                    nonSpeciesTaxaCount += 1
+                else:
+                    self.tblNewYearSpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)
+                    count += 1            
+                
                 R = R + 1
-            self.tblNewYearSpecies.removeRow(0)
+                            
+        labelText = "New year species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " other taxa"
+                            
+        self.lblNewYearSpecies.setText(labelText)
             
-        self.lblNewYearSpecies.setText("New year species (" + str(len(yearSpecies)) + ")")
-            
-       # set up tblNewMonthSpecies column headers and widths
+        # set up tblNewMonthSpecies column headers and widths
         self.tblNewMonthSpecies.setColumnCount(2)
         self.tblNewMonthSpecies.setRowCount(len(monthSpecies)+1)
         self.tblNewMonthSpecies.horizontalHeader().setVisible(False)
@@ -278,8 +325,11 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         self.tblNewMonthSpecies.setShowGrid(False)
 
+        count = 0
+        nonSpeciesTaxaCount = 0
+        
         if len(monthSpecies) > 0:
-            R = 1
+            R = 0
             for ms in monthSpecies:
                 monthItem = QTableWidgetItem()
                 monthItem.setText(ms[0])
@@ -287,17 +337,55 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
                 newMonthSpeciesItem.setText(ms[1])
                 self.tblNewMonthSpecies.setItem(R, 0, monthItem)    
                 self.tblNewMonthSpecies.setItem(R, 1, newMonthSpeciesItem)
-                R = R + 1
-            self.tblNewMonthSpecies.removeRow(0)
+                self.tblNewMonthSpecies.item(R, 1).setFont(font)
+                
+                # color code the entry. Stylesheet color  for full species, gray if not
+                # set the species to gray if it's not a true species
+                if " x " in ms[1] or "sp." in ms[1] or "/" in ms[1]:
+                    self.tblNewMonthSpecies.item(R, 1).setForeground(Qt.gray)
+                    nonSpeciesTaxaCount += 1
+                else:
+                    self.tblNewMonthSpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)
+                    count += 1            
+                
+                R += 1
+                                
+        labelText = "New month species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " other taxa"
+                                        
+        self.lblNewMonthSpecies.setText(labelText)
             
-        self.lblNewMonthSpecies.setText("New month species (" + str(len(monthSpecies)) + ")")
-            
-       # set up lstNewLifeSpecies 
+        # set up lstNewLifeSpecies 
         if len(lifeSpecies) > 0:
-            self.lstNewLifeSpecies.addItems(lifeSpecies)
+            
+            R = 0
+            
+            for ls in lifeSpecies:
+                
+                self.lstNewLifeSpecies.addItem(ls)
+                
+                self.lstNewLifeSpecies.item(R).setFont(font)
+                
+                if "/" in ls or "sp." in ls or " x " in ls:
+                    self.lstNewLifeSpecies.item(R).setForeground(Qt.gray)
+                    
+                else:
+                    self.lstNewLifeSpecies.item(R).setForeground(code_Stylesheet.speciesColor)
+                
+                R += 1
+                
             self.lstNewLifeSpecies.setSpacing(2)
-
-        self.lblNewLifeSpecies.setText("New life species (" + str(len(lifeSpecies)) + ")")
+            
+        count = self.mdiParent.db.CountSpecies(lifeSpecies)
+        nonSpeciesTaxaCount = len(lifeSpecies) - count
+        
+        labelText = "New life species: " + str(count)
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " other taxa"
+            
+        self.lblNewLifeSpecies.setText(labelText)
 
         # ****Setup new Location Species page****
         countrySpecies = self.mdiParent.db.GetNewCountrySpecies(filter,  filteredSightingList,  sightingListForSpeciesSubset,  self.speciesList)
@@ -313,18 +401,39 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         self.tblNewCountrySpecies.setShowGrid(False)
 
+        count = 0
+        nonSpeciesTaxaCount = 0
+
         if len(countrySpecies) > 0:
             R = 0
-            for ms in countrySpecies:
+            for cs in countrySpecies:
+                
                 countryItem = QTableWidgetItem()
-                countryItem.setText(self.mdiParent.db.GetCountryName(ms[0]))
+                countryItem.setText(self.mdiParent.db.GetCountryName(cs[0]))
                 newCountrySpeciesItem = QTableWidgetItem()
-                newCountrySpeciesItem.setText(ms[1])
+                newCountrySpeciesItem.setText(cs[1])
                 self.tblNewCountrySpecies.setItem(R, 0, countryItem)    
                 self.tblNewCountrySpecies.setItem(R, 1, newCountrySpeciesItem)
+                # color code the entry. Stylesheet color  for full species, gray if not
+                # set the species to gray if it's not a true species
+                
+                self.tblNewCountrySpecies.item(R, 1).setFont(font)
+                
+                if " x " in cs[1] or "sp." in cs[1] or "/" in cs[1]:
+                    self.tblNewCountrySpecies.item(R, 1).setForeground(Qt.gray)
+                    nonSpeciesTaxaCount += 1
+                
+                else:
+                    self.tblNewCountrySpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)
+                    count += 1                   
+                
                 R = R + 1
-            
-        self.lblNewCountrySpecies.setText("New country species (" + str(len(countrySpecies)) + ")")
+        labelText = "New country species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"
+                
+        self.lblNewCountrySpecies.setText(labelText)
 
         # set up tblNewStateSpecies column headers and widths
         self.tblNewStateSpecies.setColumnCount(2)
@@ -334,20 +443,43 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         header.setSectionResizeMode(1, QHeaderView.Stretch)
         self.tblNewStateSpecies.setShowGrid(False)
 
+        count = 0
+        nonSpeciesTaxaCount = 0
+
         if len(stateSpecies) > 0:
             R = 0
-            for ms in stateSpecies:
+            for ss in stateSpecies:
                 stateItem = QTableWidgetItem()
-                stateItem.setText(self.mdiParent.db.GetStateName(ms[0]))
+                stateItem.setText(self.mdiParent.db.GetStateName(ss[0]))
                 newStateSpeciesItem = QTableWidgetItem()
-                newStateSpeciesItem.setText(ms[1])
+                newStateSpeciesItem.setText(ss[1])
                 self.tblNewStateSpecies.setItem(R, 0, stateItem)    
                 self.tblNewStateSpecies.setItem(R, 1, newStateSpeciesItem)
+                
+                self.tblNewStateSpecies.item(R, 1).setFont(font)
+                
+                if " x " in ss[1] or "sp." in ss[1] or "/" in ss[1]:
+                    self.tblNewStateSpecies.item(R, 1).setForeground(Qt.gray)
+                    nonSpeciesTaxaCount += 1
+                
+                else:
+                    self.tblNewStateSpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)
+                    count += 1                   
+                
                 R = R + 1
-            self.tblNewStateSpecies.sortByColumn(0, Qt.AscendingOrder)
-            
-        self.lblNewStateSpecies.setText("New state species (" + str(len(stateSpecies)) + ")")
-
+                
+        labelText = "New state species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"
+                
+        self.lblNewStateSpecies.setText(labelText)                
+                                        
+        self.tblNewStateSpecies.sortByColumn(0, Qt.AscendingOrder)
+                
+        count = 0
+        nonSpeciesTaxaCount = 0
+                    
         # set up tblNewCountySpecies column headers and widths
         self.tblNewCountySpecies.setColumnCount(2)
         self.tblNewCountySpecies.setRowCount(len(countySpecies))
@@ -358,16 +490,35 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
 
         if len(countySpecies) > 0:
             R = 0
-            for ms in countySpecies:
+            for cs in countySpecies:
                 countyItem = QTableWidgetItem()
-                countyItem.setText(ms[0])
+                countyItem.setText(cs[0])
                 newCountySpeciesItem = QTableWidgetItem()
-                newCountySpeciesItem.setText(ms[1])
+                newCountySpeciesItem.setText(cs[1])
                 self.tblNewCountySpecies.setItem(R, 0, countyItem)    
                 self.tblNewCountySpecies.setItem(R, 1, newCountySpeciesItem)
+                
+                self.tblNewCountySpecies.item(R, 1).setFont(font)
+                
+                if " x " in cs[1] or "sp." in cs[1] or "/" in cs[1]:
+                    self.tblNewCountySpecies.item(R, 1).setForeground(Qt.gray)
+                    nonSpeciesTaxaCount += 1
+                
+                else:
+                    self.tblNewCountySpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)
+                    count += 1                   
+                
                 R = R + 1
-            
-        self.lblNewCountySpecies.setText("New county species (" + str(len(countySpecies)) + ")")
+                
+        labelText = "New county species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"
+                
+        self.lblNewCountySpecies.setText(labelText)                  
+
+        count = 0
+        nonSpeciesTaxaCount = 0            
         
         # set up tblNewLocationSpecies column headers and widths
         self.tblNewLocationSpecies.setColumnCount(2)
@@ -379,22 +530,44 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
 
         if len(locationSpecies) > 0:
             R = 0
-            for ms in locationSpecies:
+            for ls in locationSpecies:
                 locationItem = QTableWidgetItem()
-                locationItem.setText(ms[0])
+                locationItem.setText(ls[0])
                 newLocationSpeciesItem = QTableWidgetItem()
-                newLocationSpeciesItem.setText(ms[1])
+                newLocationSpeciesItem.setText(ls[1])
                 self.tblNewLocationSpecies.setItem(R, 0, locationItem)    
                 self.tblNewLocationSpecies.setItem(R, 1, newLocationSpeciesItem)
+
+                self.tblNewLocationSpecies.item(R, 1).setFont(font)
+                
+                if " x " in ls[1] or "sp." in ls[1] or "/" in ls[1]:
+                    self.tblNewLocationSpecies.item(R, 1).setForeground(Qt.gray)
+                    nonSpeciesTaxaCount += 1
+                
+                else:
+                    self.tblNewLocationSpecies.item(R, 1).setForeground(code_Stylesheet.speciesColor)
+                    count += 1                   
+                
                 R = R + 1
-            
-        self.lblNewLocationSpecies.setText("New location species (" + str(len(locationSpecies)) + ")")
+                
+        labelText = "New location species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"
+                
+        self.lblNewLocationSpecies.setText(labelText)                             
 
         # ****Setup window's main labels****
-        # set main species seen lable text
+        # set main species seen label text
         count = self.mdiParent.db.CountSpecies(self.speciesList)
+        nonSpeciesTaxaCount = self.tblSpecies.rowCount() - count
         
-        self.lblTopSpeciesSeen.setText("Species seen: " + str(count))
+        labelText = "Species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText +  " + " + str(nonSpeciesTaxaCount) + " taxa"
+        
+        self.lblTopSpeciesSeen.setText(labelText)
         
         # set main location label, using "All Locations" if none others are selected
         self.mdiParent.SetChildDetailsLabels(self, filter)
@@ -427,7 +600,34 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         self.lstSpecies.addItems(speciesList)
         self.lstSpecies.setSpacing(2)
         
-        self.lblSpeciesSeen.setText("Species seen on selected date (" + str(len(speciesList)) + "):")
+        count = 0
+        nonSpeciesTaxaCount = 0
+        
+        font = QFont()
+        font.setBold(True)
+        
+        for R in range(self.lstSpecies.count()):
+            
+            self.lstSpecies.item(R).setFont(font)
+            
+            speciesName = self.lstSpecies.item(R).text()
+            
+            if " x " in speciesName or "sp." in speciesName or "/" in speciesName:
+                self.lstSpecies.item(R).setForeground(Qt.gray)
+                nonSpeciesTaxaCount += 1
+            
+            else:
+                self.lstSpecies.item(R).setForeground(code_Stylesheet.speciesColor)
+                count += 1                   
+            
+            R = R + 1
+                
+        labelText = "Species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"
+                
+        self.lblSpeciesSeen.setText(labelText) 
     
 
     def FillMap(self):
@@ -480,8 +680,58 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
         self.lstLocationUniqueSpecies.addItems(uniqueSpecies)
         self.lstLocationUniqueSpecies.setSpacing(2)
         
-        self.lblLocationSpecies.setText("Species at selected location (" + str(len(speciesList)) + ")")
-        self.lblLocationUniqueSpecies.setText("Species seen ONLY at selected location (" + str(len(uniqueSpecies)) + ")")
+        count = 0
+        nonSpeciesTaxaCount = 0
+        
+        # set up a bold font 
+        font = QFont()
+        font.setBold(True)
+        
+        for R in range(self.lstLocationSpecies.count()):
+            
+            # set font to bold for all entries
+            self.lstLocationSpecies.item(R).setFont(font)
+            
+            # color code the entry. Stylesheet color  for full species, gray if not
+            # set the species to gray if it's not a true species
+            if " x " in self.lstLocationSpecies.item(R).text() or "sp." in self.lstLocationSpecies.item(R).text() or "/" in self.lstLocationSpecies.item(R).text():
+                self.lstLocationSpecies.item(R).setForeground(Qt.gray)
+                nonSpeciesTaxaCount += 1
+            else:
+                self.lstLocationSpecies.item(R).setForeground(code_Stylesheet.speciesColor)
+                count += 1         
+        
+        labelText = "Species: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"
+        
+        self.lblLocationSpecies.setText(labelText)
+
+        # reset counts
+        count = 0
+        nonSpeciesTaxaCount = 0
+                
+        for R in range(self.lstLocationUniqueSpecies.count()):
+            
+            # set font to bold for all entries
+            self.lstLocationUniqueSpecies.item(R).setFont(font)
+            
+            # color code the entry. Stylesheet color  for full species, gray if not
+            # set the species to gray if it's not a true species
+            if " x " in self.lstLocationUniqueSpecies.item(R).text() or "sp." in self.lstLocationUniqueSpecies.item(R).text() or "/" in self.lstLocationUniqueSpecies.item(R).text():
+                self.lstLocationUniqueSpecies.item(R).setForeground(Qt.gray)
+                nonSpeciesTaxaCount += 1
+            else:
+                self.lstLocationUniqueSpecies.item(R).setForeground(code_Stylesheet.speciesColor)
+                count += 1         
+        
+        labelText = "Observed only at location: " + str(count)
+        
+        if nonSpeciesTaxaCount > 0:
+            labelText = labelText + " + " + str(nonSpeciesTaxaCount) + " taxa"        
+        
+        self.lblLocationUniqueSpecies.setText(labelText)
 
 
     def TblSpeciesClicked(self):
@@ -1132,14 +1382,14 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
     def setFirstDateFilter(self):
         # get location name and type from focus widget. Varies for tables. 
         if self.focusWidget().objectName() == "tblSpecies":
-            date = self.focusWidget().item(self.focusWidget().currentRow(), 2).text()
+            date = self.focusWidget().item(self.focusWidget().currentRow(), 3).text()
             self.mdiParent.setDateFilter(date)
 
 
     def setLastDateFilter(self):
         # get location name and type from focus widget. Varies for tables. 
         if self.focusWidget().objectName() == "tblSpecies":
-            date = self.focusWidget().item(self.focusWidget().currentRow(), 3).text()
+            date = self.focusWidget().item(self.focusWidget().currentRow(), 4).text()
             self.mdiParent.setDateFilter(date)
             
             
@@ -1241,7 +1491,10 @@ class BigReport(QMdiSubWindow, form_BigReport.Ui_frmBigReport):
             self.tblNewCountySpecies
             ]):
             header = t.horizontalHeader()
-            header.resizeSection(0,  floor(1.2 * textWidth))
+            if t == self.tblNewYearSpecies or t == self.tblNewMonthSpecies:
+                header.resizeSection(0,  floor(.6 * textWidth))
+            else:
+                header.resizeSection(0,  floor(textWidth))
             for r in range(t.rowCount()):
                 t.setRowHeight(r, textHeight * 1.1) 
             

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'Families.ui'
+# Form implementation generated from reading ui file 'form_Families.ui'
 #
-# Created by: PyQt5 UI code generator 5.10
+# Created by: PyQt5 UI code generator 5.11.2
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -109,6 +109,7 @@ class Ui_frmFamilies(object):
         self.lblFamilies.setObjectName("lblFamilies")
         self.verticalLayout_2.addWidget(self.lblFamilies)
         self.lstFamilies = QtWidgets.QListWidget(self.frame)
+        self.lstFamilies.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
         self.lstFamilies.setObjectName("lstFamilies")
         self.verticalLayout_2.addWidget(self.lstFamilies)
         self.horizontalLayout.addWidget(self.frame)
@@ -130,6 +131,7 @@ class Ui_frmFamilies(object):
         self.lblSpecies.setObjectName("lblSpecies")
         self.verticalLayout_3.addWidget(self.lblSpecies)
         self.lstSpecies = QtWidgets.QListWidget(self.frame_2)
+        self.lstSpecies.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
         self.lstSpecies.setObjectName("lstSpecies")
         self.verticalLayout_3.addWidget(self.lstSpecies)
         self.horizontalLayout.addWidget(self.frame_2)
@@ -145,6 +147,8 @@ class Ui_frmFamilies(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.gvPieChart = QtWidgets.QGraphicsView(self.tab_2)
         self.gvPieChart.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.gvPieChart.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
+        self.gvPieChart.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
         self.gvPieChart.setObjectName("gvPieChart")
         self.horizontalLayout_2.addWidget(self.gvPieChart)
         self.tblPieChartLegend = QtWidgets.QTableWidget(self.tab_2)
@@ -153,6 +157,7 @@ class Ui_frmFamilies(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.tblPieChartLegend.sizePolicy().hasHeightForWidth())
         self.tblPieChartLegend.setSizePolicy(sizePolicy)
+        self.tblPieChartLegend.setContextMenuPolicy(QtCore.Qt.ActionsContextMenu)
         self.tblPieChartLegend.setFrameShape(QtWidgets.QFrame.NoFrame)
         self.tblPieChartLegend.setFrameShadow(QtWidgets.QFrame.Plain)
         self.tblPieChartLegend.setLineWidth(0)
@@ -169,6 +174,12 @@ class Ui_frmFamilies(object):
         self.tabFamilies.addTab(self.tab_2, "")
         self.verticalLayout_4.addWidget(self.tabFamilies)
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
+        self.actionSetFamilyFilterToPieChartLegendFamily = QtWidgets.QAction(frmFamilies)
+        self.actionSetFamilyFilterToPieChartLegendFamily.setObjectName("actionSetFamilyFilterToPieChartLegendFamily")
+        self.actionSetFilterToFamily = QtWidgets.QAction(frmFamilies)
+        self.actionSetFilterToFamily.setObjectName("actionSetFilterToFamily")
+        self.actionSetFilterToSpecies = QtWidgets.QAction(frmFamilies)
+        self.actionSetFilterToSpecies.setObjectName("actionSetFilterToSpecies")
 
         self.retranslateUi(frmFamilies)
         self.tabFamilies.setCurrentIndex(1)
@@ -187,5 +198,18 @@ class Ui_frmFamilies(object):
         self.tabFamilies.setTabText(self.tabFamilies.indexOf(self.tab), _translate("frmFamilies", "Families"))
         self.tblPieChartLegend.setSortingEnabled(True)
         self.tabFamilies.setTabText(self.tabFamilies.indexOf(self.tab_2), _translate("frmFamilies", "Pie Chart"))
+        self.actionSetFamilyFilterToPieChartLegendFamily.setText(_translate("frmFamilies", "Set filter to family"))
+        self.actionSetFilterToFamily.setText(_translate("frmFamilies", "Set filter to family"))
+        self.actionSetFilterToSpecies.setText(_translate("frmFamilies", "Set filter to species"))
 
 import icons_rc
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    frmFamilies = QtWidgets.QWidget()
+    ui = Ui_frmFamilies()
+    ui.setupUi(frmFamilies)
+    frmFamilies.show()
+    sys.exit(app.exec_())
+

@@ -41,6 +41,7 @@ class DateTotals(QMdiSubWindow, form_DateTotals.Ui_frmDateTotals):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.mdiParent = ""        
         self.tblYearTotals.itemDoubleClicked.connect(self.YearTableClicked)
         self.tblMonthTotals.itemDoubleClicked.connect(self.MonthTableClicked)
@@ -342,9 +343,9 @@ class DateTotals(QMdiSubWindow, form_DateTotals.Ui_frmDateTotals):
         
         for sighting in minimalSightingList:
             
-            # Consider only full species, not slash or spuh entries
+            # Consider only full species, not slash or spuh or hybrid entries
             commonName = sighting["commonName"]
-            if ("/" not in commonName) and ("sp." not in commonName):
+            if ("/" not in commonName) and ("sp." not in commonName) and " x " not in commonName:
             
                 if self.mdiParent.db.TestSighting(sighting,  filter) is True:
                     dbYears.add(sighting["date"][0:4])
@@ -416,7 +417,7 @@ class DateTotals(QMdiSubWindow, form_DateTotals.Ui_frmDateTotals):
             for s in monthDict[month]:
                 monthSpecies.add(s["commonName"])
                 monthChecklists.add(s["checklistID"])
-            monthArray.append([len(monthSpecies),  month, len(monthChecklists)])
+            monthArray.append([len(monthSpecies),  month, len(monthChecklists) - 1 ])
         monthArray.sort(reverse=True)
         R = 0
         for month in monthArray:

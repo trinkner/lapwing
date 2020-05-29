@@ -219,6 +219,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QLabel" name="lblSpeciesCode">
+             <property name="text">
+              <string>TextLabel</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QLabel" name="lblFirstSeen">
              <property name="text">
               <string>First Seen:</string>
@@ -286,19 +293,6 @@
            <property name="bottomMargin">
             <number>0</number>
            </property>
-           <item>
-            <widget class="QPushButton" name="buttonMacaulay">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Macaulay</string>
-             </property>
-            </widget>
-           </item>
            <item>
             <widget class="QPushButton" name="buttonWikipedia">
              <property name="sizePolicy">
