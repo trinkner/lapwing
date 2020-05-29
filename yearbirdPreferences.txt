@@ -1,0 +1,2 @@
+startupFolder=/home/richard/Dropbox/Downloads
+photoDataFile=/home/richard/Dropbox/Downloads/photoData.csv
