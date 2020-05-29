@@ -4,6 +4,7 @@ import code_Filter
 import code_Location
 import code_Individual
 import code_FloatDelegate
+import code_Stylesheet
 
 # import basic Python libraries
 from copy import deepcopy
@@ -30,7 +31,6 @@ from PyQt5.QtWidgets import (
     )
     
 
-
 class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
     
     # create "resized" as a signal that the window can emit
@@ -41,17 +41,12 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
-        self.mdiParent = ""
+        
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
+        
         self.tblList.doubleClicked.connect(self.tblListClicked)
         self.btnShowLocation.clicked.connect(self.CreateLocation)
         self.txtFind.textChanged.connect(self.ChangedFindText)
-        self.resized.connect(self.resizeMe)        
-        self.currentSpeciesList = []
-        self.btnShowLocation.setVisible(False)
-        self.lblDetails.setVisible(False)
-        self.filter = ()
-        self.listType = ""
-        
         self.actionSetDateFilter.triggered.connect(self.setDateFilter)
         self.actionSetFirstDateFilter.triggered.connect(self.setFirstDateFilter)
         self.actionSetLastDateFilter.triggered.connect(self.setLastDateFilter)
@@ -60,6 +55,16 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
         self.actionSetStateFilter.triggered.connect(self.setStateFilter)
         self.actionSetCountyFilter.triggered.connect(self.setCountyFilter)
         self.actionSetLocationFilter.triggered.connect(self.setLocationFilter)
+        self.tblList.horizontalHeader().sortIndicatorChanged.connect(self.tblList.resizeRowsToContents)
+        self.resized.connect(self.resizeMe)    
+        
+        self.btnShowLocation.setVisible(False)
+        self.lblDetails.setVisible(False)
+
+        self.mdiParent = ""
+        self.currentSpeciesList = []
+        self.filter = ()
+        self.listType = ""
 
 
     def resizeEvent(self, event):
@@ -78,6 +83,7 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
     
    
     def setCountyFilter(self):
+        
         if self.listType in ["Checklists"]:
             if self.listType == "Checklists":
                 countyName= self.tblList.item(self.tblList.currentRow(), 2).text()
@@ -91,7 +97,8 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                 self.mdiParent.setCountryFilter(countryName)
 
 
-    def setDateFilter(self):        
+    def setDateFilter(self):   
+             
         if self.listType in ["Checklists", "Single Checklist"]:
             if self.listType == "Checklists":
                 date = self.tblList.item(self.tblList.currentRow(), 4).text()
@@ -101,6 +108,7 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
    
    
     def setFirstDateFilter(self):
+        
         if self.listType in ["Species", "Locations"]:
             if self.listType == "Species":
                 date = self.tblList.item(self.tblList.currentRow(), 2).text()
@@ -120,6 +128,7 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
 
 
     def setLocationFilter(self):
+        
         if self.listType in ["Locations", "Single Checklist", "Checklists"]:
             if self.listType == "Locations":
                 locationName= self.tblList.item(self.tblList.currentRow(), 0).text()
@@ -131,12 +140,14 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                  
    
     def setSpeciesFilter(self):
+        
         if self.listType in ["Species", "Single Checklist"]:
             speciesName = self.tblList.item(self.tblList.currentRow(), 1).text()
             self.mdiParent.setSpeciesFilter(speciesName)
             
    
     def setStateFilter(self):
+        
         if self.listType in ["Checklists"]:
             if self.listType == "Checklists":
                 stateName= self.tblList.item(self.tblList.currentRow(), 1).text()
@@ -495,9 +506,9 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
         font.setBold(True)        
        
         if filter.getLocationType() == "Location":
-           self.btnShowLocation.setVisible(True)
+            self.btnShowLocation.setVisible(True)
                   
-       # set up tblList column headers and widths
+        # set up tblList column headers and widths
         self.tblList.setShowGrid(False)        
         header = self.tblList.horizontalHeader()
         header.setVisible(True)   
@@ -506,13 +517,13 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
         if filter.getChecklistID() == "":
                         
             thisWindowList = self.mdiParent.db.GetSpeciesWithData(filter,  [], "Subspecies")
-            thisCleanedWindowList = []
-            
-            # clean out spuh and slash entries
-            for s in range(len(thisWindowList)):
-                if not("sp." in thisWindowList[s][0] or "/" in thisWindowList[s][0]):
-                    thisCleanedWindowList.append(thisWindowList[s])
-            thisWindowList = thisCleanedWindowList
+#             thisCleanedWindowList = []
+#             
+#             # clean out spuh and slash entries
+#             for s in range(len(thisWindowList)):
+#                 if not("sp." in thisWindowList[s][0] or "/" in thisWindowList[s][0]):
+#                     thisCleanedWindowList.append(thisWindowList[s])
+#             thisWindowList = thisCleanedWindowList
                     
             if len(thisWindowList) == 0:
                 return(False)                    
@@ -545,7 +556,12 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                 
                 self.tblList.setItem(R, 1, speciesItem)
                 self.tblList.item(R, 1).setFont(font)
-                self.tblList.item(R, 1).setForeground(Qt.blue)
+                
+                # set the species to gray if it's not a true species
+                if " x " in species[0] or "sp." in species[0] or "/" in species[0]:
+                    self.tblList.item(R, 1).setForeground(Qt.gray)
+                else:
+                    self.tblList.item(R, 1).setForeground(code_Stylesheet.speciesColor)
 
                 self.tblList.setItem(R, 2, firstItem)
                 self.tblList.setItem(R, 3, lastItem)
@@ -597,9 +613,14 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
                 self.tblList.setItem(R, 0, taxItem)    
                 self.tblList.setItem(R, 1, speciesItem)
                 self.tblList.item(R, 1).setFont(font)
-                self.tblList.item(R, 1).setForeground(Qt.blue)  
                 self.tblList.setItem(R, 2, countItem)
                 self.tblList.setItem(R,  3,  commentItem)
+                
+                # set the species to gray if it's not a true species
+                if " x " in s["commonName"] or "sp." in s["commonName"] or "/" in s["commonName"]:
+                    self.tblList.item(R, 1).setForeground(Qt.gray)
+                else:
+                    self.tblList.item(R, 1).setForeground(code_Stylesheet.speciesColor)                
         
                 self.currentSpeciesList.append(s["commonName"])
                 
@@ -624,18 +645,18 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
             distance = thisWindowList[0]["distance"]
             observerCount = thisWindowList[0]["observers"]
             
-            if time != "":
+            if time != ""and time is not None:
                 time = time + ",  "
                 
-            if duration != "0":
+            if duration != "0" and duration is not None:
                 duration = duration + " min,  "
             else:
                 duration = ""
                 
-            if distance != "":
+            if distance != "" and distance is not None:
                 distance = distance + " km,  "
                 
-            if observerCount != "":
+            if observerCount != "" and observerCount is not None:
                 observerCount = observerCount + " obs,  "
             
             if "Traveling" in protocol:
@@ -665,9 +686,9 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
             self.lblSpecies.setText(
                 "Species: " + 
                 str(speciesCount) + 
-                " plus " + 
+                " + " + 
                 str(self.tblList.rowCount() - speciesCount) + 
-                " other taxa"
+                " taxa"
                 )
 
         self.mdiParent.SetChildDetailsLabels(self, filter)
@@ -677,6 +698,8 @@ class Lists(QMdiSubWindow, form_Lists.Ui_frmSpeciesList):
 
         location = filter.getLocationName()
         if location != "":
+            if filter.getLocationType() == "Region":
+                location = self.mdiParent.db.GetRegionName(location)
             if filter.getLocationType() == "Country":
                 location = self.mdiParent.db.GetCountryName(location)
             if filter.getLocationType() == "State":

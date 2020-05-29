@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1173</width>
+    <width>1262</width>
     <height>1000</height>
    </rect>
   </property>
@@ -51,8 +51,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1173</width>
-     <height>19</height>
+     <width>1262</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -60,9 +60,12 @@
      <string>File</string>
     </property>
     <addaction name="actionOpen"/>
+    <addaction name="actionClose"/>
     <addaction name="actionPrint"/>
     <addaction name="actionCreatePDF"/>
+    <addaction name="actionPreferences"/>
     <addaction name="actionExit"/>
+    <addaction name="separator"/>
    </widget>
    <widget class="QMenu" name="menuReports">
     <property name="title">
@@ -95,6 +98,7 @@
     <addaction name="actionLocations"/>
     <addaction name="actionChecklists"/>
     <addaction name="actionFamilies"/>
+    <addaction name="actionPhotos"/>
    </widget>
    <widget class="QMenu" name="menuAbout">
     <property name="title">
@@ -106,16 +110,42 @@
     <property name="title">
      <string>Filter</string>
     </property>
-    <addaction name="actionShowFilter"/>
-    <addaction name="actionHideFilter"/>
-    <addaction name="actionClearFilter"/>
+    <addaction name="actionShowStandardFilter"/>
+    <addaction name="actionShowPhotoFilter"/>
+    <addaction name="actionHideStandardFilter"/>
+    <addaction name="actionHidePhotoFilter"/>
     <addaction name="separator"/>
+    <addaction name="actionClearAllFilters"/>
+    <addaction name="actionClearStandardFilter"/>
+    <addaction name="actionClearPhotoFilter"/>
+   </widget>
+   <widget class="QMenu" name="menuPhotos">
+    <property name="title">
+     <string>Photos</string>
+    </property>
+    <addaction name="actionOpenPhotoSettings"/>
+    <addaction name="actionClosePhotoSettings"/>
+    <addaction name="actionSavePhotoSettings"/>
+    <addaction name="separator"/>
+    <addaction name="actionAddPhotos"/>
+    <addaction name="actionEditPhotosByFilter"/>
+    <addaction name="actionUpdateEXIFDataForAllPhotos"/>
+   </widget>
+   <widget class="QMenu" name="menuChoropleths">
+    <property name="title">
+     <string>Choropleths</string>
+    </property>
+    <addaction name="actionUS_States"/>
+    <addaction name="actionUS_Counties"/>
+    <addaction name="actionWorld_Countries"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuFilter"/>
    <addaction name="menuLists"/>
    <addaction name="menuMap"/>
    <addaction name="menuReports"/>
+   <addaction name="menuPhotos"/>
+   <addaction name="menuChoropleths"/>
    <addaction name="menuWindows"/>
    <addaction name="menuAbout"/>
   </widget>
@@ -136,7 +166,7 @@
    <addaction name="actionPrint"/>
    <addaction name="actionCreatePDF"/>
    <addaction name="separator"/>
-   <addaction name="actionClearFilter"/>
+   <addaction name="actionClearAllFilters"/>
    <addaction name="separator"/>
    <addaction name="actionSpecies"/>
    <addaction name="actionLocations"/>
@@ -147,25 +177,18 @@
    <addaction name="actionLocationTotals"/>
    <addaction name="actionCompareLists"/>
    <addaction name="actionBigReport"/>
+   <addaction name="actionPhotos"/>
    <addaction name="separator"/>
    <addaction name="actionFind"/>
+   <addaction name="separator"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
   <widget class="QDockWidget" name="dckFilter">
-   <property name="minimumSize">
-    <size>
-     <width>86</width>
-     <height>108</height>
-    </size>
-   </property>
-   <property name="baseSize">
-    <size>
-     <width>0</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::LeftToRight</enum>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
    </property>
    <property name="features">
     <set>QDockWidget::AllDockWidgetFeatures</set>
@@ -174,7 +197,7 @@
     <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
    </property>
    <property name="windowTitle">
-    <string>Filter</string>
+    <string>Standard Filter</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
@@ -189,8 +212,17 @@
          <height>0</height>
         </size>
        </property>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
        <property name="frameShape">
         <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Plain</enum>
+       </property>
+       <property name="lineWidth">
+        <number>0</number>
        </property>
        <property name="sizeAdjustPolicy">
         <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -203,13 +235,37 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>183</width>
-          <height>865</height>
+          <width>179</width>
+          <height>859</height>
          </rect>
         </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
+         <property name="spacing">
+          <number>3</number>
+         </property>
+         <property name="leftMargin">
+          <number>3</number>
+         </property>
+         <property name="topMargin">
+          <number>3</number>
+         </property>
+         <property name="rightMargin">
+          <number>3</number>
+         </property>
+         <item alignment="Qt::AlignTop">
           <widget class="QFrame" name="frmFilter">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
            </property>
@@ -230,6 +286,37 @@
              <number>0</number>
             </property>
             <item>
+             <widget class="QLabel" name="lblCountries_2">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Region</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cboRegions">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Select a country to limit your search to one country's sightings.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QLabel" name="lblCountries">
               <property name="font">
                <font>
@@ -238,7 +325,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Countries</string>
+               <string>Country</string>
               </property>
              </widget>
             </item>
@@ -255,6 +342,9 @@
                 <pointsize>9</pointsize>
                </font>
               </property>
+              <property name="toolTip">
+               <string>Select a country to limit your search to one country's sightings.</string>
+              </property>
              </widget>
             </item>
             <item>
@@ -266,7 +356,7 @@
                </font>
               </property>
               <property name="text">
-               <string>States</string>
+               <string>State</string>
               </property>
              </widget>
             </item>
@@ -277,6 +367,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a state to limit your search to one state's sightings.</string>
               </property>
              </widget>
             </item>
@@ -289,7 +382,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Counties</string>
+               <string>County</string>
               </property>
              </widget>
             </item>
@@ -300,6 +393,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a countyto limit your search to one county's sightings.</string>
               </property>
              </widget>
             </item>
@@ -312,7 +408,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Locations</string>
+               <string>Location</string>
               </property>
              </widget>
             </item>
@@ -323,6 +419,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a location to limit your search to one location's sightings.</string>
               </property>
              </widget>
             </item>
@@ -335,7 +434,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Orders</string>
+               <string>Order</string>
               </property>
              </widget>
             </item>
@@ -346,6 +445,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select an order to limit your search to sightings of one order.</string>
               </property>
              </widget>
             </item>
@@ -358,7 +460,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Families</string>
+               <string>Familiy</string>
               </property>
              </widget>
             </item>
@@ -369,6 +471,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a family to limit your search to sightings of one family.</string>
               </property>
              </widget>
             </item>
@@ -393,6 +498,29 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>Select a species to limit your search to sightings of one species.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblCommonNameSearch">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Name Search</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="txtCommonNameSearch">
+              <property name="toolTip">
+               <string>Enter text that must appear in the common name.  Prepend your text with s: to search the scientific name instead.</string>
+              </property>
              </widget>
             </item>
             <item>
@@ -416,6 +544,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>Select a date option to limit your search.</string>
+              </property>
              </widget>
             </item>
             <item>
@@ -438,6 +569,9 @@
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
+              </property>
+              <property name="toolTip">
+               <string>Select a start date.</string>
               </property>
               <property name="dateTime">
                <datetime>
@@ -478,6 +612,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>Select an end date.</string>
+              </property>
               <property name="dateTime">
                <datetime>
                 <hour>0</hour>
@@ -517,6 +654,9 @@
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
+              <property name="toolTip">
+               <string>Select a seasonal range, such as a time of year.</string>
+              </property>
              </widget>
             </item>
             <item>
@@ -534,6 +674,12 @@
             </item>
             <item>
              <widget class="QFrame" name="frmStartSeasonalRange">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="frameShape">
                <enum>QFrame::NoFrame</enum>
               </property>
@@ -561,21 +707,15 @@
                </property>
                <item>
                 <widget class="QComboBox" name="cboStartSeasonalRangeMonth">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+                 <property name="toolTip">
+                  <string>Select the starting seasonal range's month.</string>
                  </property>
                 </widget>
                </item>
                <item>
                 <widget class="QComboBox" name="cboStartSeasonalRangeDate">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+                 <property name="toolTip">
+                  <string>Select the starting seasonal range's date.</string>
                  </property>
                 </widget>
                </item>
@@ -597,6 +737,12 @@
             </item>
             <item>
              <widget class="QFrame" name="frmEndSeasonalRange">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="frameShape">
                <enum>QFrame::NoFrame</enum>
               </property>
@@ -624,21 +770,528 @@
                </property>
                <item>
                 <widget class="QComboBox" name="cboEndSeasonalRangeMonth">
+                 <property name="toolTip">
+                  <string>Select the ending seasonal range's month.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="cboEndSeasonalRangeDate">
+                 <property name="toolTip">
+                  <string>Select the ending seasonal range's date.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QDockWidget" name="dckPhotoFilter">
+   <property name="features">
+    <set>QDockWidget::AllDockWidgetFeatures</set>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea</set>
+   </property>
+   <property name="windowTitle">
+    <string>Photo Filter</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockPhotoWidgetContents">
+    <layout class="QVBoxLayout" name="verticalLayout_4">
+     <property name="spacing">
+      <number>3</number>
+     </property>
+     <property name="leftMargin">
+      <number>3</number>
+     </property>
+     <property name="topMargin">
+      <number>3</number>
+     </property>
+     <property name="rightMargin">
+      <number>3</number>
+     </property>
+     <property name="bottomMargin">
+      <number>3</number>
+     </property>
+     <item alignment="Qt::AlignTop">
+      <widget class="QScrollArea" name="scrPhotoFilter">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Plain</enum>
+       </property>
+       <property name="lineWidth">
+        <number>0</number>
+       </property>
+       <property name="sizeAdjustPolicy">
+        <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
+       </property>
+       <property name="widgetResizable">
+        <bool>true</bool>
+       </property>
+       <widget class="QWidget" name="scrollAreaPhotoWidgetContents">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>190</width>
+          <height>440</height>
+         </rect>
+        </property>
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QFrame" name="frmPhotoFilter">
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_6">
+            <property name="leftMargin">
+             <number>0</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLabel" name="lblSighting">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Rating Range</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="frmRatingRange">
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
+              <property name="lineWidth">
+               <number>0</number>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_5">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QComboBox" name="cboStartRatingRange">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
                  </property>
+                 <property name="toolTip">
+                  <string>Specify the lowest f-stop aperture for a range of apertures.</string>
+                 </property>
                 </widget>
                </item>
                <item>
-                <widget class="QComboBox" name="cboEndSeasonalRangeDate">
+                <widget class="QComboBox" name="cboEndRatingRange">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the highest f-stop aperture for a range of apertures.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblSpeciesHasPhoto">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Species</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cboSpeciesHasPhoto">
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Specify whether a species must
+have a photo attached for the other
+filters' circumstances.
+(You don't need to set this
+if you set other camera filters.)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblCamera">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Camera</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cboCamera">
+              <property name="font">
+               <font>
+                <pointsize>9</pointsize>
+               </font>
+              </property>
+              <property name="toolTip">
+               <string>Specify a camera model.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblLens">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Lens</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="cboLens">
+              <property name="toolTip">
+               <string>Specify a lens model.</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblShutterSpeedRange">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Shutter Speed Range</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="frmShutterSpeedRange">
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
+              <property name="lineWidth">
+               <number>0</number>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_3">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QComboBox" name="cboStartShutterSpeedRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the shortest shutter speed for a range of shutter speeds.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="cboEndShutterSpeedRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the longest shutter speed for a range of shutter speeds.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblApertureRange">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Aperture Range</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="frmApertureRange">
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
+              <property name="lineWidth">
+               <number>0</number>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_4">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QComboBox" name="cboStartApertureRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the lowest f-stop aperture for a range of apertures.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="cboEndApertureRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the highest f-stop aperture for a range of apertures.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblFocalLengthRange">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Focal Length Range</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="frmFocalLengthRange">
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
+              <property name="lineWidth">
+               <number>0</number>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_7">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QComboBox" name="cboStartFocalLengthRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the shortest focal length for a range of focal lengths.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="cboEndFocalLengthRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the longest focal length for a range of focal lengths.</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="lblISORange">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>ISO Range</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QFrame" name="frmIsoRange">
+              <property name="frameShape">
+               <enum>QFrame::NoFrame</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Plain</enum>
+              </property>
+              <property name="lineWidth">
+               <number>0</number>
+              </property>
+              <layout class="QHBoxLayout" name="horizontalLayout_6">
+               <property name="spacing">
+                <number>0</number>
+               </property>
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QComboBox" name="cboStartIsoRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the lowest ISO number for a range of ISO numbers.</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="cboEndIsoRange">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="toolTip">
+                  <string>Specify the highest ISO number for a range of ISO numbers.</string>
                  </property>
                 </widget>
                </item>
@@ -800,23 +1453,120 @@
     <string>About Lapwing</string>
    </property>
   </action>
-  <action name="actionShowFilter">
+  <action name="actionShowStandardFilter">
    <property name="text">
-    <string>Show Filter</string>
+    <string>Show standard filter</string>
    </property>
   </action>
-  <action name="actionHideFilter">
+  <action name="actionHideStandardFilter">
    <property name="text">
-    <string>Hide Filter</string>
+    <string>Hide standard filter</string>
+   </property>
+   <property name="toolTip">
+    <string>Hide standard filter</string>
    </property>
   </action>
-  <action name="actionClearFilter">
+  <action name="actionClearAllFilters">
    <property name="icon">
     <iconset resource="icons.qrc">
      <normaloff>:/icon_filter.png</normaloff>:/icon_filter.png</iconset>
    </property>
    <property name="text">
-    <string>Clear Filter</string>
+    <string>Clear all filters</string>
+   </property>
+  </action>
+  <action name="actionSetPhotoFolder">
+   <property name="text">
+    <string>Set Photo Folder</string>
+   </property>
+  </action>
+  <action name="actionPhotos">
+   <property name="icon">
+    <iconset resource="icons.qrc">
+     <normaloff>:/icon_camera.png</normaloff>:/icon_camera.png</iconset>
+   </property>
+   <property name="text">
+    <string>Photos</string>
+   </property>
+  </action>
+  <action name="actionEditPhotosByFilter">
+   <property name="text">
+    <string>Edit photos by filter...</string>
+   </property>
+  </action>
+  <action name="actionOpenPhotoSettings">
+   <property name="text">
+    <string>Open photo settings file...</string>
+   </property>
+  </action>
+  <action name="actionAddPhotos">
+   <property name="text">
+    <string>Add photos...</string>
+   </property>
+  </action>
+  <action name="actionSavePhotoSettings">
+   <property name="text">
+    <string>Save photo settings file...</string>
+   </property>
+  </action>
+  <action name="actionPreferences">
+   <property name="text">
+    <string>Preferences...</string>
+   </property>
+  </action>
+  <action name="actionUpdateEXIFDataForAllPhotos">
+   <property name="text">
+    <string>Update EXIF data for all photos</string>
+   </property>
+  </action>
+  <action name="actionShowPhotoFilter">
+   <property name="text">
+    <string>Show photo filter</string>
+   </property>
+  </action>
+  <action name="actionHidePhotoFilter">
+   <property name="text">
+    <string>Hide photo filter</string>
+   </property>
+  </action>
+  <action name="actionClearPhotoFilter">
+   <property name="text">
+    <string>Clear photo filter</string>
+   </property>
+  </action>
+  <action name="actionClearStandardFilter">
+   <property name="text">
+    <string>Clear standard filters</string>
+   </property>
+  </action>
+  <action name="actionClose">
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </action>
+  <action name="actionClosePhotoSettings">
+   <property name="text">
+    <string>Close photo settings file</string>
+   </property>
+  </action>
+  <action name="actionUS_States">
+   <property name="text">
+    <string>US States</string>
+   </property>
+  </action>
+  <action name="actionWorld_Countries">
+   <property name="text">
+    <string>World Countries</string>
+   </property>
+  </action>
+  <action name="actionWorld_Subregion_1">
+   <property name="text">
+    <string>World Subregion 1</string>
+   </property>
+  </action>
+  <action name="actionUS_Counties">
+   <property name="text">
+    <string>US Counties</string>
    </property>
   </action>
  </widget>

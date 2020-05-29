@@ -1,6 +1,7 @@
 # import the GUI forms that we create with Qt Creator
 import code_Individual
 import form_Compare
+import code_Stylesheet
 
 # import the Qt components we'll use
 # do this so later we won't have to clutter our code with references to parent Qt classes 
@@ -10,7 +11,8 @@ from PyQt5.QtGui import (
     )
     
 from PyQt5.QtCore import (
-    pyqtSignal
+    pyqtSignal,
+    Qt
 )
     
 from PyQt5.QtWidgets import (
@@ -34,6 +36,7 @@ class Compare(QMdiSubWindow, form_Compare.Ui_frmCompare):
     def __init__(self):
         super(self.__class__, self).__init__()
         self.setupUi(self)
+        self.setAttribute(Qt.WA_DeleteOnClose,True)
         self.mdiParent = ""
         self.resized.connect(self.resizeMe)                      
         self.btnCompare.clicked.connect(self.CompareLists)
@@ -43,6 +46,13 @@ class Compare(QMdiSubWindow, form_Compare.Ui_frmCompare):
         self.webView = QWebEngineView()
         self.myPrinter = QPrinter(QPrinter.HighResolution)
         
+        red = str(code_Stylesheet.speciesColor.red())
+        green = str(code_Stylesheet.speciesColor.green())
+        blue = str(code_Stylesheet.speciesColor.blue())
+        
+        self.lstLeftOnly.setStyleSheet("QListWidget {color: rgb(" + red + "," + green + "," + blue + "); font-weight: bold}")
+        self.lstRightOnly.setStyleSheet("QListWidget {color: rgb(" + red + "," + green + "," + blue + "); font-weight: bold}")
+        self.lstBoth.setStyleSheet("QListWidget {color: rgb(" + red + "," + green + "," + blue + "); font-weight: bold}")
 
     def html(self):
     
@@ -198,7 +208,8 @@ class Compare(QMdiSubWindow, form_Compare.Ui_frmCompare):
                     for s in window.currentSpeciesList:
                         if "(" in s:
                             s = s.split(" (")[0]
-                        leftListSpecies.append(s)
+                        if "/" not in s and " x " not in s and "sp." not in s:
+                            leftListSpecies.append(s)
                         
         # get right list species
         rightListSpecies = []
@@ -209,7 +220,8 @@ class Compare(QMdiSubWindow, form_Compare.Ui_frmCompare):
                     for s in window.currentSpeciesList:
                         if "(" in s:
                             s = s.split(" (")[0]
-                        rightListSpecies.append(s)
+                        if "/" not in s and " x " not in s and "sp." not in s:
+                            rightListSpecies.append(s)
         
         bothLists = []
         leftListOnly = []
@@ -244,9 +256,9 @@ class Compare(QMdiSubWindow, form_Compare.Ui_frmCompare):
         self.lstBoth.setSpacing(2)
         self.lstRightOnly.addItems(rightListOnly)
         self.lstRightOnly.setSpacing(2)        
-        self.lblLeftListOnly.setText("Species only on This List (" + str(self.lstLeftOnly.count())+")")
-        self.lblBothLists.setText("Species on Both Lists (" + str(self.lstBoth.count()) + ")")
-        self.lblRightListOnly.setText("Species only on This List (" + str(self.lstRightOnly.count()) + ")")
+        self.lblLeftListOnly.setText("Species only on this list: " + str(self.lstLeftOnly.count()))
+        self.lblBothLists.setText("Species on both lists: " + str(self.lstBoth.count()))
+        self.lblRightListOnly.setText("Species only on this list: " + str(self.lstRightOnly.count()))
         
         
     def CreateNewIndividual(self,  speciesName):      
@@ -275,7 +287,7 @@ class Compare(QMdiSubWindow, form_Compare.Ui_frmCompare):
     def scaleMe(self):
                
         scaleFactor = self.mdiParent.scaleFactor
-        windowWidth =  800  * scaleFactor
+        windowWidth =  900  * scaleFactor
         windowHeight = 500 * scaleFactor            
         self.resize(windowWidth, windowHeight)
         
